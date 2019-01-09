@@ -1,4 +1,4 @@
-# Copyright (c) Aleksandra Jarmolińska
+Copyright (c) Aleksandra Jarmolińska
 
 # KnotPull - a simplifier for 3D structures
 
