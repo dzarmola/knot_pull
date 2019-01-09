@@ -1,0 +1,77 @@
+from .config import CHAINZ
+
+
+def print_out_last(handle,frames):
+    with open(handle,"a",0) as out:
+        frame = frames[-1]
+        out.write("t {}\n".format(len(frames)))
+        for j,a in enumerate(frame):
+            out.write("%d\t%3.5f\t%3.5f\t%3.5f\n" % (j+1,a[0],a[1],a[2]))
+        out.write("\n")
+
+def print_out_last_pdb(handle,frames,atoms):
+
+    x=0
+    #with open(handle,"a",0) as out:
+    out = handle
+    frame = frames[-1]
+    out.write("MODEL {}\n".format(len(frames)))
+    prev_id = None
+    for j,(id,a) in enumerate(frame):
+        id=int(id)
+        chain = CHAINZ[x]
+        if prev_id is not None:
+            for _ in xrange(prev_id+1,id):
+                out.write("ATOM  % 5d  CA  ALA %s%4d    %8.3f%8.3f%8.3f                       C\n" % (_, chain ,_,a[0],a[1],a[2]))
+        out.write("ATOM  % 5d  CA  ALA %s%4d    %8.3f%8.3f%8.3f                       C\n" % (id, chain ,id,a[0],a[1],a[2]))
+        prev_id = id
+    out.write("ENDMDL\n")
+
+def print_out_one_frame_old(handle,atom,len_fr):
+    x=0
+    while atom.Nhand:
+        atom = atom.Nhand
+    #with open(handle,"a",0) as out:
+    out = handle
+    out.write("MODEL {}\n".format(len_fr))
+    j=0
+    while atom.Chand:
+        chain = CHAINZ[x]
+        a=atom.vec
+        out.write("ATOM  % 5d  CA  ALA %s%4d    %8.3f%8.3f%8.3f                       C\n" % (j+1, chain ,j+1,a[0],a[1],a[2]))
+        atom = atom.Chand
+        j+=1
+#            if atoms[j].end:
+#                x+=1
+    chain = CHAINZ[x]
+    a=atom.vec
+    out.write("ATOM  % 5d  CA  ALA %s%4d    %8.3f%8.3f%8.3f                       C\n" % (j+1, chain ,j+1,a[0],a[1],a[2]))
+    out.write("ENDMDL\n")
+    #print j+1,"atoms"
+
+def print_out_one_frame(out,atoms,len_fr,chain):
+    out.write("MODEL {}\n".format(len_fr))
+    for j,atom in enumerate(atoms):
+        a=atom.vec
+        out.write("ATOM  % 5d  CA  ALA %s%4d    %8.3f%8.3f%8.3f                       C\n" % (j+1, chain ,j+1,a[0],a[1],a[2]))
+#            if atoms[j].end:
+#                x+=1
+    out.write("ENDMDL\n")
+
+
+def print_out_all(handle,frames):
+    with open(handle,"w",0) as out:
+        for t,frame in enumerate(frames):
+            out.write("t {}\n".format(t+1))
+            for j,a in enumerate(frame):
+                out.write("%d\t%3.5f\t%3.5f\t%3.5f\n" % (j+1,a[0],a[1],a[2]))
+            out.write("\n")
+
+def write_xyz(out,atoms,soft_end=False):
+#    with open(handle,"w",0) as out:
+    for i,bead in enumerate(atoms):
+        out.write("{} {} {} {}\n".format(i+1,bead.x,bead.y,bead.z))
+        if bead.end:
+            out.write("END\n")
+    if soft_end:
+        out.write("SOFTEND\n")
