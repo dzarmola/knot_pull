@@ -7,7 +7,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="knot_pull",
-    version="0.1.1",
+    version="0.1.2",
     author="Aleksandra Jarmolinska",
     author_email="dzarmola@gmail.com",
     description="Simplifier of 3D structures",
@@ -27,6 +27,6 @@ setuptools.setup(
       ],
     test_suite='nose.collector',
     tests_require=['nose'],
-    scripts=['bin/knot_pull_check'],
+    scripts=['bin/knot_pull_check','bin/knot_pull_show'],
     include_package_data=True
 )

@@ -24,8 +24,14 @@ knot_pull_check -o from_xyz.pdb -k 05.xyz
 ```
 To run on by structure id from RCSB PDB:
 ```
-knot_pull_check -o gr_throwback.pdb -k 4mcb
+knot_pull_check -k 4mcb
 ```
+
+To show coloured trajectory in PyMOL (if installed):
+```
+knot_pull_shown my_output_file.pdb
+```
+If PyMOL is nto available in system path it can be specified as the second argument
 
 ### Help:
 ```

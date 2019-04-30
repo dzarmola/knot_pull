@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+#Copyright (c) Aleksandra Jarmolinska 2018
+
+# Load output from knot_pull_check for pretty PyMOL display
+# Needs pymol in system path or specified as second argument
+
+PYMOL_SCRIPT='set ribbon_trace_atoms,1 ;
+    load '$1',moj ;
+    hide everything ;
+    show ribbon;
+    for x in cmd.get_names(): \
+      for ch in cmd.get_chains(x): \
+        print x, " has chain ", ch \
+        util.chainbow(x+" and c. "+ch)
+    bg_color white;
+    set cartoon_trace_atoms,1 ;
+    set ray_opaque_background, off;
+    set surface_quality, 1;
+    set cartoon_ring_mode, 3;
+    set cartoon_ring_finder, 1;
+    set cartoon_ladder_mode, 1;
+    set cartoon_nucleic_acid_mode, 4;
+    set cartoon_ring_transparency, 0.5;
+    set ray_trace_mode, 1;
+    set ambient, 1;
+    set reflect, 0;
+    set specular, off;
+    set depth_cue, 0;
+    set orthoscopic, on;
+    set two_sided_lighting, on;
+    set cartoon_side_chain_helper, on ;
+    split_chains'
+
+if [ ! -z $2 ] ; then
+    "$2" -d "$PYMOL_SCRIPT"
+else
+    if type pymol >/dev/null 2>&1 ; then
+        pymol -d "$PYMOL_SCRIPT"
+    else
+        echo "PyMol not available"
+    fi
+fi
+

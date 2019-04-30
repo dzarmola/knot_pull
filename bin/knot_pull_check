@@ -13,7 +13,7 @@ from knot_pull.unentangler import unentangle
 
 name = "knot_pull"
 
-CONFIG = {'CHECK_KNOT': 0, 'KEEP_ALL': 0, 'TRAJECTORY': 1, 'OUTPUT': '', "GREEDY": 0}
+CONFIG = {'CHECK_KNOT': 0, 'KEEP_ALL': 0, 'TRAJECTORY': 1, 'OUTPUT': '', "GREEDY": 0, 'QUIET': 0}
 
 def main():
     """Main body of the command line program"""
@@ -31,7 +31,11 @@ def main():
     parser.add_argument("-c", "--chain", default='',
                         help="Specify which chain you want to simplify.")
     parser.add_argument("-o", "--output", default='',nargs='?',
-                        help="""Specify the output file. Format is guessed based on extension [default pdb]. Default is stdout""")
+                        help="""Specify the output file. Format is guessed based on extension [default pdb]. 
+                        For stdout use "-". Empty argument makes an '_out.pdb' file. 
+                        If this option is missing just the last frame will be shown (sets trajectory to 0)""")
+    parser.add_argument("-q", "--quiet", action="store_true", default=0,
+                        help="Nothing except the knot type (if calculated) will be written to the screen")
     parser.add_argument("-s", "--save", default='',nargs='?',
                         help="""Write out a savefile. If any argument is given here - run from a savefile (knot detection only).""")
     args = parser.parse_args()
@@ -40,11 +44,12 @@ def main():
     CONFIG['KEEP_ALL'] = args.preserve_resnums
     CONFIG['TRAJECTORY'] = args.trajectory
     CONFIG['GREEDY'] = args.detect_knot
+    CONFIG['QUIET'] = args.quiet
 
 
     if args.save:
         atoms = read_from_xyz(filename=args.save)
-        print "Save start",len(atoms)
+        if not CONFIG['QUIET']: print "Save start",len(atoms)
         chains = pull(atoms, '', greedy=0, greedy_file='', trajectory=0)
         unentangle(chains, outfile=0)
         exit()
@@ -76,7 +81,7 @@ def main():
     else:
         fformat = args.format
 
-    print "#LOG: data format: {}".format(fformat)
+    if not CONFIG['QUIET']: print "#LOG: data format: {}".format(fformat)
 
     if fformat == 'online':
         atoms = read_from_web(infile,selected_chain=args.chain)
@@ -97,10 +102,13 @@ def main():
             parser.print_help(sys.stderr)
             sys.exit(1)
 
-    print "#LOG: got coordinates: {} bead(s)".format(len(atoms))
+    if not CONFIG['QUIET']: print "#LOG: got coordinates: {} bead(s)".format(len(atoms))
 
     output = args.output
     if args.output == "":
+        output = sys.stdout
+        CONFIG['TRAJECTORY'] = False
+    elif args.output == "-":
         output = sys.stdout
     elif args.output is None:
         output = infile.replace("xyz","pdb").replace(".pdb","_out.pdb")
@@ -110,7 +118,7 @@ def main():
 
     chains = pull(atoms, output, greedy=CONFIG["GREEDY"], greedy_file=output,trajectory=CONFIG['TRAJECTORY'])
 
-    print "#LOG: finished smoothing: {} chain(s)".format(len(chains))
+    if not CONFIG['QUIET']: print "#LOG: finished smoothing: {} chain(s)".format(len(chains))
 
     if args.save is None:
         out = "SAVE_" + infile.replace(".pdb", "_out.pdb").replace(".xyz", "_out.xyz")
@@ -121,7 +129,8 @@ def main():
         out.close()
 
     if atoms and CONFIG['CHECK_KNOT']:
-        unentangle(chains, outfile=0)
+        if not CONFIG['QUIET']: print "Final topology:",
+        print unentangle(chains, outfile=0)
 
     if args.output:
         output.close()

@@ -228,9 +228,8 @@ def run_through_filtering(atoms, outfile, greedy=0, greedy_file="",trajectory=Tr
         if VERBOSE:
             print "Finished greedy filtering, have {} atoms".format(len(atoms))
 
-    if outfile:
+    if trajectory and outfile:
         print_out_last_pdb(outfile, frames, atoms)
-
 
     return frames,atoms
 
@@ -320,7 +319,7 @@ class Chain:
         self.dowker = None
 
     def print2file(self,model_num,outfile):
-        print_out_one_frame(outfile, self.atoms, model_num,self.chain)
+        #print_out_one_frame(outfile, self.atoms, model_num,self.chain)
         model_num+=1
         for alist in self.atom_lists:
             print_out_one_frame(outfile, alist, model_num,self.chain)
