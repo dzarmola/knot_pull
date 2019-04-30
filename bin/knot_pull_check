@@ -116,7 +116,8 @@ def main():
     else:
         output = open(output, "w", 0)
 
-    chains = pull(atoms, output, greedy=CONFIG["GREEDY"], greedy_file=output,trajectory=CONFIG['TRAJECTORY'])
+    chains = pull(atoms, output, greedy=CONFIG["GREEDY"], greedy_file=output,trajectory=CONFIG['TRAJECTORY'],
+                  quiet=CONFIG['QUIET'])
 
     if not CONFIG['QUIET']: print "#LOG: finished smoothing: {} chain(s)".format(len(chains))
 

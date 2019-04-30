@@ -268,7 +268,7 @@ def run_through_division(atoms):
 
     return atom_lists  # returns all separateable segments
 
-def pull(atoms, outfile, greedy=0, greedy_file="",trajectory=True):
+def pull(atoms, outfile, greedy=0, greedy_file="",trajectory=True,quiet=False):
     frames, atoms = run_through_filtering(atoms, outfile, greedy=greedy, greedy_file=greedy_file,
                                                         trajectory=trajectory)
 
@@ -280,7 +280,7 @@ def pull(atoms, outfile, greedy=0, greedy_file="",trajectory=True):
         ch = Chain(c,chain)
         if outfile:
             #print "Have",ch.atom_lists,"groups"
-            model_num = ch.print2file(model_num,outfile)
+            if not quiet: model_num = ch.print2file(model_num,outfile)
         chains.append(ch)
 
     for _,c1 in enumerate(chains):
