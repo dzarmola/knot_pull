@@ -12,6 +12,11 @@ trajectory of consecutive simplifications performed.
 
 `pip install --index-url https://test.pypi.org/simple/ knot_pull`
 
+If installing with `pip --user` knot_pull_check and knot_pull_show
+will be installed in your user base
+(`python -c "import site; print(site.USER_BASE)"`), e.g.
+`$HOME/.local/bin/knot_pull_check`
+
 ## Running
 
 To run on a specific chain of a local pdb file:
