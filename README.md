@@ -9,11 +9,11 @@ used for knot detection in proteins and chromatine chains.
 It can return either a final, simplified structure, or a .pdb formatted
 trajectory of consecutive simplifications performed.
 
-##Install
+## Install
 (soon) pip install knot_pull 
 pip install --index-url https://test.pypi.org/simple/ knot_pull
 
-##Running
+## Running
 
 To run on a specific chain of a local pdb file:
 ```
@@ -28,7 +28,7 @@ To run on by structure id from RCSB PDB:
 knot_pull_check -o gr_throwback.pdb -k 4mcb
 ```
 
-Help:
+### Help:
 ```
 usage: knot_pull_check [-h] [-p] [-t] [-f {pdb,xyz,guess}] [-k] [-c CHAIN]
                        [-o [OUTPUT]] [-s [SAVE]]
