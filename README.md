@@ -1,5 +1,3 @@
-# Copyright (c) Aleksandra Jarmolińska
-
 # KnotPull - a simplifier for 3D structures
 
 KnotPull reduces a user provided 3D structure, to simplify it,
@@ -60,3 +58,5 @@ optional arguments:
                         run from a savefile (knot detection only).
 
 ```
+
+### Copyright (c) Aleksandra Jarmolińska
