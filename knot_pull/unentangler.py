@@ -163,7 +163,7 @@ def unentangle(chains,outfile=0):
     if VERBOSE:
         print "Chain neighbourhoods:", neighs
     #W = " U ".join("  #  ".join(x.wanda for x in neigh) for neigh in neighs)
-    D = "  U  ".join(" # ".join(x.dowker for x in neigh) for neigh in neighs)
+    D = "  U  ".join(" # ".join("[{}]{}".format(x.dowker,x.chain_name) for x in neigh) for neigh in neighs)
 
     #print "Wanda says",W
     #print "Final topology:",D

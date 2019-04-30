@@ -268,7 +268,7 @@ def run_through_division(atoms):
 
     return atom_lists  # returns all separateable segments
 
-def pull(atoms, outfile, greedy=0, greedy_file="",trajectory=True,quiet=False):
+def pull(atoms, outfile, greedy=0, greedy_file="",trajectory=True,quiet=False, chain_names=[]):
     frames, atoms = run_through_filtering(atoms, outfile, greedy=greedy, greedy_file=greedy_file,
                                                         trajectory=trajectory)
 
@@ -278,6 +278,7 @@ def pull(atoms, outfile, greedy=0, greedy_file="",trajectory=True,quiet=False):
     for c, chain in enumerate(separate_chains):
         #print "chain", c
         ch = Chain(c,chain)
+        if chain_names: ch.setChainName(chain_names[c])
         if outfile:
             #print "Have",ch.atom_lists,"groups"
             if not quiet: model_num = ch.print2file(model_num,outfile)
@@ -317,6 +318,10 @@ class Chain:
         self.closing_paths = [closeTheCurve(a) for a in self.atom_lists]
         self.wanda = None
         self.dowker = None
+        self.chain_name = ""
+
+    def setChainName(self,c):
+        self.chain_name = "({})".format(c)
 
     def print2file(self,model_num,outfile):
         #print_out_one_frame(outfile, self.atoms, model_num,self.chain)

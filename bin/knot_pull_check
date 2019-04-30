@@ -17,9 +17,9 @@ CONFIG = {'CHECK_KNOT': 0, 'KEEP_ALL': 0, 'TRAJECTORY': 1, 'OUTPUT': '', "GREEDY
 
 def main():
     """Main body of the command line program"""
-    parser = argparse.ArgumentParser(description="Simplify the 3D structure while preserving the topology")
+    parser = argparse.ArgumentParser(description="Simplify the 3D structure of a molecule while preserving the topology")
 
-    parser.add_argument("infile", help="Structure file which will be used",nargs='?')
+    parser.add_argument("infile", help="Structure file which will be used (to download the structure from RCSB PDB give only the PDB ID",nargs='?')
     parser.add_argument("-p", "--preserve_resnums", action="store_true", default=0,
                         help="Keep original numbering")
     parser.add_argument("-t", "--trajectory", action="store_true", default=1,
@@ -84,19 +84,20 @@ def main():
     if not CONFIG['QUIET']: print "#LOG: data format: {}".format(fformat)
 
     if fformat == 'online':
-        atoms = read_from_web(infile,selected_chain=args.chain)
+        atoms,cnames = read_from_web(infile,selected_chain=args.chain)
         #for i,a in enumerate(atoms):
         #    print i,a
         #exit()
         infile = "{}.pdb".format(infile)
     elif fformat == 'pdb':
-        atoms = read_from_pdb(filename=infile,selected_chain=args.chain)
+        atoms,cnames = read_from_pdb(filename=infile,selected_chain=args.chain)
         if not atoms:
             print """No such chain: {}\n##############################################""".format(args.chain)
             parser.print_help(sys.stderr)
             sys.exit(1)
     else:
-        atoms = read_from_xyz(filename=infile)
+        if args.chain: print "#WARNING: File format is .xyz yet chain was specified - it will not work, all chains will be used"
+        atoms,cnames = read_from_xyz(filename=infile)
         if not atoms:
             print """Empty file/wrong format!\n##############################################"""
             parser.print_help(sys.stderr)
@@ -117,7 +118,7 @@ def main():
         output = open(output, "w", 0)
 
     chains = pull(atoms, output, greedy=CONFIG["GREEDY"], greedy_file=output,trajectory=CONFIG['TRAJECTORY'],
-                  quiet=CONFIG['QUIET'])
+                  quiet=CONFIG['QUIET'], chain_names=cnames)
 
     if not CONFIG['QUIET']: print "#LOG: finished smoothing: {} chain(s)".format(len(chains))
 

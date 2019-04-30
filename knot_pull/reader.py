@@ -17,10 +17,13 @@ def read_from_web(pdbid,selected_chain=''):
     coords = get_from_afar(pdbId=pdbid,chain=selected_chain)
     a=[]
     curc = None
+    cnames = []
     for atom in coords:
         ch,pos = atom
         if selected_chain and ch not in selected_chain:
             continue
+        if ch not in cnames:
+            cnames.append(ch)
         if curc is not None and ch != curc:
             a[-1].end = True
         pos = map(NUMBER_PRECISION_FUNCTION,pos)
@@ -49,13 +52,14 @@ def read_from_web(pdbid,selected_chain=''):
         if i<len(a)-1:
             at.setChand(a[i+1])
     atoms = a
-    return atoms
+    return atoms,cnames
 
 def read_from_pdb(filename,selected_chain=''):
     a = []
     last = None
     last_chain = None
     Calpha = []
+    cnames = []
     if selected_chain:#len(selected_chain)>1:
         selected_chains = list(selected_chain)
         for c in selected_chains:
@@ -101,6 +105,7 @@ def read_from_pdb(filename,selected_chain=''):
                                 a.append(Bead(Vector(middle), "CA"))
                         a.append(new_atom)
                     last_chain = line[21]
+                    if last_chain in selected_chains and last_chain not in cnames: cnames.append(last_chain)
     for i,at in enumerate(a):
         at.setId(i)
         if i>0:
@@ -108,7 +113,7 @@ def read_from_pdb(filename,selected_chain=''):
         if i<len(a)-1:
             at.setChand(a[i+1])
     atoms = a
-    return atoms
+    return atoms,cnames
 
 def guess_format(fname):
     Ca = re.compile("ATOM  .{7}CA.{7}([0-9 ]{4}).{4}([0-9\. -]{8})([0-9\. -]{8})([0-9\. -]{8}).{23}C")
@@ -123,11 +128,13 @@ def guess_format(fname):
 
 def read_from_xyz(filename,save=False):#,start,stop):
     a=[]
+    ccount = 1
     with open(filename) as input:
         for line in input:
             if not line: continue
             if line.strip() == "END":
                 a[-1].end = True
+                ccount += 1
                 continue
             if line.strip() == "SOFTEND":
                 continue
@@ -157,4 +164,4 @@ def read_from_xyz(filename,save=False):#,start,stop):
         if i<len(a)-1:
             at.setChand(a[i+1])
     atoms = a
-    return atoms
+    return atoms, range(ccount)
