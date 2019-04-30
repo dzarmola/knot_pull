@@ -10,8 +10,9 @@ It can return either a final, simplified structure, or a .pdb formatted
 trajectory of consecutive simplifications performed.
 
 ## Install
-(soon) pip install knot_pull 
-pip install --index-url https://test.pypi.org/simple/ knot_pull
+(soon) `pip install knot_pull `
+
+`pip install --index-url https://test.pypi.org/simple/ knot_pull`
 
 ## Running
 
