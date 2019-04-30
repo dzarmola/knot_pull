@@ -203,7 +203,10 @@ def translate_dt_list(code):
                 out.append(DT_CODES[dc])
                 break
         else:
-            out.append("{}0".format(len(c)))
+            if len(c) == 5:
+                out.append("52")
+            else:
+                out.append("{}0".format(len(c)))
     return "#".join(out)
 
 

@@ -8,9 +8,9 @@ It can return either a final, simplified structure, or a .pdb formatted
 trajectory of consecutive simplifications performed.
 
 ## Install
-(soon) `pip install knot_pull `
+`pip install knot_pull `
 
-`pip install --index-url https://test.pypi.org/simple/ knot_pull`
+(older versions) `pip install --index-url https://test.pypi.org/simple/ knot_pull`
 
 If installing with `pip --user` knot_pull_check and knot_pull_show
 will be installed in your user base

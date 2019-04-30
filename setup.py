@@ -7,10 +7,10 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="knot_pull",
-    version="0.1.4",
+    version="0.1.5",
     author="Aleksandra Jarmolinska",
     author_email="dzarmola@gmail.com",
-    description="Simplifier of 3D structures",
+    description="Simplifier of 3D structures of molecules",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/dzarmola/knot_pull",
