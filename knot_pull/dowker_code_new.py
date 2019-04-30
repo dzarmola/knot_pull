@@ -307,7 +307,6 @@ def dowker_dbl_loops(code):
                     trash.add(v1)
                     trash.add(v2)
                     break
-    #print "dbl thrash",trash
 
     b=not bool(trash)
     for k1, v1 in enumerate(code):
@@ -322,10 +321,14 @@ def dowker_dbl_loops(code):
                     if v2.min() - v1.min() == v2.max()-v1.max() and (v2.min()- v1.max() ==1 or v1.min()-v2.max() == 1) \
                         and not (v1.min() < v2.min() < v1.max() or v2.min() < v1.min() < v2.max() ): #TODO add wraparound
                         if same_side_cross(v1,v1_neigh) != same_side_cross(v2,v2_neigh): #if just one - can do this
-                            trash.add(v1)
+                            pass
+                            """trash.add(v1)
                             trash.add(v2)
                             b=0
-                            break
+                            print "adding", v1_neigh, v1, v2, v2_neigh
+                            print v1.min(),v1.max(),v2.min(),v2.max()
+                            break"""
+                            #wywalam bo psulo (-4,11),(3,-12),(-2,7),(1,-8),(6,.9),(-10,13),(.5,14)
                         elif same_side_cross(v1,v1_neigh) and same_side_cross(v2,v2_neigh):
                             trash.add(v1)
                             trash.add(v2)
@@ -405,9 +408,9 @@ def third_redei(code):
                         a, b = v1.uneven(), v2.even()
                         c, d = v1.even(), v2.uneven()
                     cross_to_cross = (min(c,d)+1,max(c,d)-1)
-                    print "cross to cross",cross_to_cross,"for",v1,v2,a,b
+                    #print "cross to cross",cross_to_cross,"for",v1,v2,a,b
                     our_cross = [cr.has_values(cross_to_cross) for cr in code]
-                    print our_cross,code
+                    #print our_cross,code
                     if sum(our_cross)==1:
                         our_cross = [cr for cr in code if cr.has_values(cross_to_cross)][0]
                         e,f = our_cross.even(),our_cross.uneven()
@@ -434,7 +437,8 @@ def third_redei(code):
                         code.add(_1)
                         code.add(_2)
                         code.add(_3)
-    return changed
+                        return changed # added 11.02
+    #return changed
 def fix_dbl_loop(code, dbl_loops):
     """Corrects numbering after removing dbl loop"""
     m = (len(code) + len(dbl_loops) * 2) * 2
@@ -451,6 +455,9 @@ def fix_dbl_loop(code, dbl_loops):
 def just_one_in(loop,l):
     return (l[0] in range(loop.min(),loop.max())) != (l[1] in range(loop.min(), loop.max()))
 
+def both_in(loop,l):
+    return (l[0] in range(loop.min(),loop.max())) and (l[1] in range(loop.min(), loop.max()))
+
 
 def can_be_untwisted(code):
     trash = []
@@ -459,7 +466,11 @@ def can_be_untwisted(code):
             trash.append(loop)
     ch = bool(trash)
     while trash:
-        code.remove(trash.pop())
+        loop = trash.pop()
+        code.remove(loop)
+        for cross in code:
+            if both_in(loop,cross):
+                cross.reverse_topo()
     return ch
 
 
@@ -498,7 +509,7 @@ def find_axis(atoms):
     r=1
     while any(c[0]%2==c[1]%2 for c in code):
         if r==3:
-            print "Need more axes changes"
+            #print "Need more axes changes"
             break
         for i, e in enumerate(atoms):
             e = [e[r % 3], e[(r + 1) % 3], e[(r + 2) % 3]]
@@ -521,21 +532,29 @@ def dowker_code(atoms, from_atoms=True):
         code = from_tuples(atoms)
     changed = 1
     dc = code
+    dc.check_yo()
     while changed and dc.dowker_code():
         changed = dowker_loop(dc)
+        dc.check_yo()
         if VERBOSE: print "single",dc
         changed = dowker_dbl_loops(dc) or changed  # if not loops else False #bo po co liczyc na zapas
+        dc.check_yo()
         if VERBOSE: print "double",dc
         changed = can_be_untwisted(dc) or changed  # if not loops else False #bo po co liczyc na zapas
+        dc.check_yo()
         #        fix_dbl_loop(dc, dbl_loops)
         if VERBOSE: print "untwist", dc
         changed2 = unfurl(dc)
+        dc.check_yo()
         if VERBOSE: print "unfurl",dc
         changed = changed or changed2
+        dc.check_yo()
         while changed2:
             changed2 = unfurl(dc)
+            dc.check_yo()
             if VERBOSE: print "unfurl",dc
         changed = changed or third_redei(dc)
+        dc.check_yo()
     if VERBOSE: print "Finally",dc
 
     if not dc.dowker_code():
@@ -547,19 +566,25 @@ def dowker_code(atoms, from_atoms=True):
     dc = code
     while changed and dc.dowker_code():
         changed = dowker_loop(dc)
+        dc.check_yo()
         if VERBOSE: print "single",dc
         changed = dowker_dbl_loops(dc) or changed  # if not loops else False #bo po co liczyc na zapas
+        dc.check_yo()
         if VERBOSE: print "double",dc
         changed = can_be_untwisted(dc) or changed  # if not loops else False #bo po co liczyc na zapas
+        dc.check_yo()
         #        fix_dbl_loop(dc, dbl_loops)
         if VERBOSE: print "untwist", dc
         changed2 = unfurl(dc)
+        dc.check_yo()
         if VERBOSE: print "unfurl",dc
         changed = changed or changed2
         while changed2:
             changed2 = unfurl(dc)
+            dc.check_yo()
             if VERBOSE: print "unfurl",dc
         changed = changed or third_redei(dc)
+        dc.check_yo()
     if VERBOSE: print "Finally",dc
 
     if not dc.dowker_code():
@@ -574,8 +599,11 @@ def dowker_code(atoms, from_atoms=True):
     return translated
 
 if __name__ == "__main__":
-    import sys
-    lista = eval("[" + sys.argv[1].replace('.',"") + "]")
-    print lista
+    #import sys
+    #lista = eval("[" + sys.argv[1].replace('.',"") + "]")
+    #print lista
+    lista = [(-4,11),(3,-12),(-2,7),(1,-8),(6,-9),(-10,13),(-5,14)]
+    #code = Code()
+    #code.read_in(lista)
     dowker_code(lista,from_atoms=False)
 #    print find_permutations_in([8,6,10,2,4,14,16,12])

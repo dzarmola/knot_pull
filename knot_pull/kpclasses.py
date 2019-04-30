@@ -90,31 +90,31 @@ class Line:
         return "{}{}".format(("-" if self.val%2==0 and self.top else "." if self.top else ""),self.val)
 
     def __gt__(self,l):
-        if type(l) == type(1):
-            return self.val > l.val
+        if type(l) in [type(1),type(1.)]:
+            return self.val
         else:
-            return self.val > l
+            return self.val > l.val
 
     def __lt__(self,l):
-        if type(l) == type(1):
+        if type(l) in [type(1),type(1.)]:
             return self.val < l
         else:
             return self.val < l.val
 
     def __eq__(self,l):
-        if type(l) == type(1):
+        if type(l) in [type(1),type(1.)]:
             return self.val == l
         else:
             return self.val == l.val
 
     def __add__(self,l):
-        if type(l) == type(1):
+        if type(l) in [type(1),type(1.)]:
             return self.val+l
         else:
             return self.val+l.val
 
     def __sub__(self,l):
-        if type(l) == type(1):
+        if type(l) in [type(1),type(1.)]:
             return self.val-l
         else:
             return self.val-l.val
@@ -134,6 +134,10 @@ class Crossing:
         self.l1 = Line(num1,top1)
         self.l2 = Line(num2,top2)
         self._pair = (self.l1,self.l2)
+
+    def reverse_topo(self):
+        self.l1.top = not self.l1.top
+        self.l2.top = not self.l2.top
 
     def __getitem__(self,key):
         return self._pair[key]
@@ -206,6 +210,10 @@ class Code:
 
     def __getitem__(self,key):
         return self.crossings[key]
+
+    def check_yo(self):
+        if any(cr.l1.val%2==cr.l2.val for cr in self.crossings):
+            raise ValueError("Dowker broke: {}".format(self))
 
     def set_mod_dowker_code(self,lista):
         self._mod_dowker_code = lista

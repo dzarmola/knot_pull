@@ -129,9 +129,14 @@ def check_with_wanda(atom_list):
     return kfp
 
 def make_chain_neighbourhoods(chains):
-    neigh = {c.chain:c.neighbours for c in chains}
+    #print vars(chains[0])
+    #print [(c,type(c)) for c in chains[0].neighbours]
+    neigh = {c.chain:[_.chain for _ in c.neighbours] for c in chains}
     trans = {c.chain:c for c in chains}
     all_chains = trans.keys()
+    #print neigh
+    #print trans
+    #print all_chains
     neighbourhoods = []
     while all_chains:
         queue = [all_chains.pop(0)]
@@ -141,7 +146,7 @@ def make_chain_neighbourhoods(chains):
             n.append(cur)
             for _ in neigh[cur]:
                 if _ not in n and _ not in queue:
-                    queue.append(n)
+                    queue.append(_)
         neighbourhoods.append([trans[x] for x in n])
         for x in n[1:]:
             all_chains.pop(all_chains.index(x))
@@ -161,5 +166,5 @@ def unentangle(chains,outfile=0):
     D = " U ".join("  #  ".join(x.dowker for x in neigh) for neigh in neighs)
 
     #print "Wanda says",W
-    print "Morwen says",D
+    print "Final topology:",D
     return D

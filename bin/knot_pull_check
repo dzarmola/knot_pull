@@ -6,7 +6,7 @@ Can also calculate knot type using the Dowker notation."""
 
 import argparse
 import sys,os,ntpath
-from knot_pull.reader import read_from_pdb, read_from_xyz, guess_format,download_from_pdb
+from knot_pull.reader import read_from_pdb, read_from_xyz, read_from_web,guess_format,download_from_pdb
 from knot_pull.puller import pull
 from knot_pull.writer import write_xyz
 from knot_pull.unentangler import unentangle
@@ -51,14 +51,20 @@ def main():
 
     infile = args.infile
     if not infile:
-        exit("No input file specified!!")
+        print """No input file specified!!\n##############################################"""
+        parser.print_help(sys.stderr)
+        sys.exit(1)
+
     if not os.path.isfile(infile):
         path,fname = ntpath.split(infile)
         pdbid = fname.split(".")[0]
-        savename = "{}{}{}.pdb".format(path,os.path.sep if path else "",pdbid)
-        download_from_pdb(infile,savename=savename)
-        args.format = 'pdb'
-        infile = savename
+        #savename = "{}{}{}.pdb".format(path,os.path.sep if path else "",pdbid)
+        #download_from_pdb(infile,savename=savename)
+        #args.format = 'pdb'
+        #infile = savename
+        args.format = 'online'
+        infile = pdbid
+
 
     if args.format == "guess":
         if ".xyz" in infile.lower():
@@ -70,14 +76,28 @@ def main():
     else:
         fformat = args.format
 
-    if fformat == 'pdb':
+    print "#LOG: data format: {}".format(fformat)
+
+    if fformat == 'online':
+        atoms = read_from_web(infile,selected_chain=args.chain)
+        #for i,a in enumerate(atoms):
+        #    print i,a
+        #exit()
+        infile = "{}.pdb".format(infile)
+    elif fformat == 'pdb':
         atoms = read_from_pdb(filename=infile,selected_chain=args.chain)
         if not atoms:
-            exit("No such chain: {}".format(args.chain))
+            print """No such chain: {}\n##############################################""".format(args.chain)
+            parser.print_help(sys.stderr)
+            sys.exit(1)
     else:
         atoms = read_from_xyz(filename=infile)
         if not atoms:
-            exit("Empty file/wrong format!")
+            print """Empty file/wrong format!\n##############################################"""
+            parser.print_help(sys.stderr)
+            sys.exit(1)
+
+    print "#LOG: got coordinates: {} bead(s)".format(len(atoms))
 
     output = args.output
     if args.output == "":
@@ -89,6 +109,8 @@ def main():
         output = open(output, "w", 0)
 
     chains = pull(atoms, output, greedy=CONFIG["GREEDY"], greedy_file=output,trajectory=CONFIG['TRAJECTORY'])
+
+    print "#LOG: finished smoothing: {} chain(s)".format(len(chains))
 
     if args.save is None:
         out = "SAVE_" + infile.replace(".pdb", "_out.pdb").replace(".xyz", "_out.xyz")

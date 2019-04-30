@@ -17,7 +17,7 @@ def print_out_last_pdb(handle,frames,atoms):
     frame = frames[-1]
     out.write("MODEL {}\n".format(len(frames)))
     prev_id = None
-    for j,(id,a) in enumerate(frame):
+    for j,(id,a,end) in enumerate(frame):
         id=int(id)
         chain = CHAINZ[x]
         if prev_id is not None:
@@ -25,29 +25,9 @@ def print_out_last_pdb(handle,frames,atoms):
                 out.write("ATOM  % 5d  CA  ALA %s%4d    %8.3f%8.3f%8.3f                       C\n" % (_, chain ,_,a[0],a[1],a[2]))
         out.write("ATOM  % 5d  CA  ALA %s%4d    %8.3f%8.3f%8.3f                       C\n" % (id, chain ,id,a[0],a[1],a[2]))
         prev_id = id
+        if end:
+            x+=1
     out.write("ENDMDL\n")
-
-def print_out_one_frame_old(handle,atom,len_fr):
-    x=0
-    while atom.Nhand:
-        atom = atom.Nhand
-    #with open(handle,"a",0) as out:
-    out = handle
-    out.write("MODEL {}\n".format(len_fr))
-    j=0
-    while atom.Chand:
-        chain = CHAINZ[x]
-        a=atom.vec
-        out.write("ATOM  % 5d  CA  ALA %s%4d    %8.3f%8.3f%8.3f                       C\n" % (j+1, chain ,j+1,a[0],a[1],a[2]))
-        atom = atom.Chand
-        j+=1
-#            if atoms[j].end:
-#                x+=1
-    chain = CHAINZ[x]
-    a=atom.vec
-    out.write("ATOM  % 5d  CA  ALA %s%4d    %8.3f%8.3f%8.3f                       C\n" % (j+1, chain ,j+1,a[0],a[1],a[2]))
-    out.write("ENDMDL\n")
-    #print j+1,"atoms"
 
 def print_out_one_frame(out,atoms,len_fr,chain):
     out.write("MODEL {}\n".format(len_fr))

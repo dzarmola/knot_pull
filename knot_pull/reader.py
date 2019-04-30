@@ -2,8 +2,10 @@ import urllib
 from .vector_ops import *
 from .config import NUMBER_PRECISION_FUNCTION
 from .kpclasses import Bead
+from .downloader import get_from_afar
 from numpy import array as Vector
 import re
+
 
 
 def download_from_pdb(pdbid,savename=''):
@@ -11,17 +13,55 @@ def download_from_pdb(pdbid,savename=''):
     urllib.urlretrieve(url,savename if savename else "{}.pdb".format(pdbid))
 
 
+def read_from_web(pdbid,selected_chain=''):
+    coords = get_from_afar(pdbId=pdbid,chain=selected_chain)
+    a=[]
+    curc = None
+    for atom in coords:
+        ch,pos = atom
+        if selected_chain and ch not in selected_chain:
+            continue
+        if curc is not None and ch != curc:
+            a[-1].end = True
+        pos = map(NUMBER_PRECISION_FUNCTION,pos)
+        new_vec = Vector(pos)
+        new_atom = Bead(new_vec,"CA")
+#        nv = get_middlepoint(a[-1].vec,new_vec)
+        if a and (a[-1].end!=True) and point_distance(a[-1].vec,new_vec)>4.:
+            pd = point_distance(a[-1].vec,new_vec)
+            #cd = pd/4
+            l = a[-1].vec
+            middle = get_middlepoint(l,new_vec)
+            if pd>12.:
+                lm = get_middlepoint(l,middle)
+                a.append(Bead(Vector(lm),"CA"))
+                a.append(Bead(Vector(middle),"CA"))
+                rm = get_middlepoint(new_vec,middle)
+                a.append(Bead(Vector(rm),"CA"))
+            else:
+                a.append(Bead(Vector(middle),"CA"))
+        a.append(new_atom)
+        curc = ch
+    for i,at in enumerate(a):
+        at.setId(i)
+        if i>0:
+            at.setNhand(a[i-1])
+        if i<len(a)-1:
+            at.setChand(a[i+1])
+    atoms = a
+    return atoms
+
 def read_from_pdb(filename,selected_chain=''):
     a = []
     last = None
     last_chain = None
     Calpha = []
-    if selected_chain: selected_chain = list(selected_chain)
-    if len(selected_chain)>1:
-        for c in selected_chain:
+    if selected_chain:#len(selected_chain)>1:
+        selected_chains = list(selected_chain)
+        for c in selected_chains:
             Calpha.append(re.compile("ATOM  .{7}CA.{6}"+c+"([0-9 ]{4}).{4}([0-9\. -]{8})([0-9\. -]{8})([0-9\. -]{8}).{23}C"))
-    elif selected_chain:
-        Calpha.append(re.compile("ATOM  .{7}CA.{6}"+selected_chain[0]+"([0-9 ]{4}).{4}([0-9\. -]{8})([0-9\. -]{8})([0-9\. -]{8}).{23}C"))
+    #elif :
+    #    Calpha.append(re.compile("ATOM  .{7}CA.{6}"+selected_chain[0]+"([0-9 ]{4}).{4}([0-9\. -]{8})([0-9\. -]{8})([0-9\. -]{8}).{23}C"))
     else:
         Calpha.append(re.compile("ATOM  .{7}CA.{7}([0-9 ]{4}).{4}([0-9\. -]{8})([0-9\. -]{8})([0-9\. -]{8}).{23}C"))
 
@@ -35,9 +75,10 @@ def read_from_pdb(filename,selected_chain=''):
             for Ca in Calpha:
                 if Ca.match(line):
                     if last_chain is not None and last_chain != line[21]:
-                        selected_chain.pop(selected_chain.index(last_chain))
-                        if not selected_chain:
-                            break
+                        if selected_chain:
+                            selected_chains.pop(selected_chains.index(last_chain))
+                            if not selected_chains:
+                                break
                         else:
                             a[-1].end = True
                     g = Ca.findall(line)[0]
@@ -59,6 +100,7 @@ def read_from_pdb(filename,selected_chain=''):
                             else:
                                 a.append(Bead(Vector(middle), "CA"))
                         a.append(new_atom)
+                    last_chain = line[21]
     for i,at in enumerate(a):
         at.setId(i)
         if i>0:

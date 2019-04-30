@@ -188,7 +188,7 @@ def run_through_filtering(atoms, outfile, greedy=0, greedy_file="",trajectory=Tr
     """Governs reduction process and when it should end (when there is no improvement)"""
 
     frames = []
-    frames.append([(x.original_id, x.vec) for x in atoms])
+    frames.append([(x.original_id, x.vec, x.end) for x in atoms])
     if outfile and trajectory:
         print_out_last_pdb(outfile, frames, atoms)
 
@@ -198,7 +198,7 @@ def run_through_filtering(atoms, outfile, greedy=0, greedy_file="",trajectory=Tr
     atoms_num = len(set(_.tuple() for _ in atoms))
 
     while changed:  # TODO should check RMSD up to 2 steps back
-        frames.append([(x.original_id, list(x.vec)) for x in atoms])
+        frames.append([(x.original_id, list(x.vec), x.end) for x in atoms])
         if len(frames) >= 3 and len(frames[-1]) == len(frames[-3]):
             if all([all(i == j for i, j in zip(x[1], y[1])) for x, y in zip(frames[-1], frames[-3])]):
                 # if two frames back we had the exact same positions
@@ -224,7 +224,7 @@ def run_through_filtering(atoms, outfile, greedy=0, greedy_file="",trajectory=Tr
 
     if greedy: #reduce number of atoms (improves topology detection)
         atoms, _ = filter_greedy(atoms, greedy_file, len(frames))
-        frames.append([(x.original_id, x.vec) for x in atoms])
+        frames.append([(x.original_id, x.vec, x.end) for x in atoms])
         if VERBOSE:
             print "Finished greedy filtering, have {} atoms".format(len(atoms))
 
@@ -280,7 +280,7 @@ def pull(atoms, outfile, greedy=0, greedy_file="",trajectory=True):
         #print "chain", c
         ch = Chain(c,chain)
         if outfile:
-            print "Have",ch.atom_lists,"groups"
+            #print "Have",ch.atom_lists,"groups"
             model_num = ch.print2file(model_num,outfile)
         chains.append(ch)
 
@@ -292,15 +292,19 @@ def pull(atoms, outfile, greedy=0, greedy_file="",trajectory=True):
 
     return chains
 
+def same_vecs(l1,l2):
+    return all(np.array_equal(x.vec,y.vec) for x,y in zip(l1,l2))
+
 def are_chains_linked(ch1,ch2):
     _tmp_both = chainDeepCopy(ch1.atoms+ch2.atoms)
+    _tmp_both[len(ch1.atoms)-1].end = True
     _tmp_ch1 = chainDeepCopy(ch1.atoms)
     _tmp_ch2 = chainDeepCopy(ch2.atoms)
 
     _,_both = run_through_filtering(_tmp_both, outfile=0, greedy=1)
     _,_ch1 = run_through_filtering(_tmp_ch1, outfile=0, greedy=1)
     _,_ch2 = run_through_filtering(_tmp_ch2, outfile=0, greedy=1)
-    return _both != chainDeepCopy(_ch1+_ch2)
+    return not same_vecs(_both,_ch1+_ch2)
 
 
 class Chain:
