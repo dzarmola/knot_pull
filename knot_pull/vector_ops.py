@@ -1,6 +1,6 @@
+from __future__ import print_function
 import numpy as np
 from math import sqrt, acos
-
 tmp = 0
 
 
@@ -110,7 +110,7 @@ def checkIfLED(atoms):
                 return True
         return False
     except:
-        print "wwyalilo sie w checkIfLED"
+        print( "wwyalilo sie w checkIfLED")
         return False
 
 def checkIfProperLED(atoms):
@@ -258,8 +258,7 @@ def in_triangle(p1, p2, p3, x):
         tmp = s
     except np.linalg.linalg.LinAlgError:
         s = np.linalg.lstsq(a, b)[0]
-
-        print tmp, s
+        print ("LinAlgError:",tmp, s)
     return s[0] >= 0 and s[1] >= 0 and s[0] + s[1] <= 1
 
 
@@ -276,7 +275,7 @@ def get_list_of_points_on_line(p1, p2):
     llen = point_distance(p1, p2)  # sqrt(len_squared_v3())
     unit_line_vec = mul_v3_fl(line_vec, llen)
     out = []
-    for i in xrange(1, 10):
+    for i in range(1, 10):
         out.append(add_v3v3(p1, mul_v3_fl(unit_line_vec, i / 10.)))
     return out
 
@@ -417,7 +416,7 @@ def get_crossing_2d(p, pr, q, qs):
         return p[0] * q[1] - p[1] * q[0]
 
     def mul(p, s):
-        return map(lambda x: x * s, p)
+        return list(map(lambda x: x * s, p))
 
     def sum(p, q):
         return (p[0] + q[0], p[1] + q[1])

@@ -1,7 +1,7 @@
 
 from .vector_ops import point_distance
 
-class VectorN:
+class VectorN(object):
     def __init__(self,*args):
         if len(args)==1:
             v = args[0]
@@ -20,7 +20,7 @@ class VectorN:
 
 
 
-class Bead:
+class Bead(object):
     def __init__(self, vec, type, original_id=None):
         self.x = vec[0]
         self.y = vec[1]
@@ -78,7 +78,7 @@ def chainDeepCopy(atom_list):
             e.setChand(new[i + 1])
     return new
 
-class Line:
+class Line(object):
     def __init__(self, num, top):
         self.val = num
         self.top = top # boolean
@@ -119,6 +119,9 @@ class Line:
         else:
             return self.val-l.val
 
+    def __int__(self):
+        return self.val
+
     def __mod__(self,l):
         return self.val%l
 
@@ -129,7 +132,7 @@ class Line:
         return self.val
 
 
-class Crossing:
+class Crossing(object):
     def __init__(self,num1,top1,num2,top2):
         self.l1 = Line(num1,top1)
         self.l2 = Line(num2,top2)
@@ -194,10 +197,11 @@ class Crossing:
     def has_values(self,tup):
         return self.l1.val!=self.l2.val and self.l1.val in tup and self.l2.val in tup
 
-class Code:
+class Code(object):
     def __init__(self):
         self.crossings = []
         self._mod_dowker_code = None
+        self.history = set([])
 
     def __repr__(self):
         return ",".join(str(x) for x in self.crossings)
@@ -270,7 +274,7 @@ class Code:
 
     def dowker_code(self): #absolute values are implied
         if self._mod_dowker_code is not None:
-            return map(abs,self._mod_dowker_code)
+            return list(map(abs,self._mod_dowker_code))
         cd = sorted([x.to_code() for x in self.crossings])
         return [x[1] for x in cd]
 
@@ -307,3 +311,14 @@ class Code:
             if val in c:
                 return c
         return None
+
+class CodeHistory(object):
+    def __init__(self):
+        self.history = set([])
+    def add(self,code):
+        cr = code.dowker_str()# tuple(code.crossings)
+        if cr not in self.history:
+            self.history.add(cr)
+            return True
+        else:
+            return False

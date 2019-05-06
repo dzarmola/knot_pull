@@ -26,7 +26,7 @@ def read_from_web(pdbid,selected_chain=''):
             cnames.append(ch)
         if curc is not None and ch != curc:
             a[-1].end = True
-        pos = map(NUMBER_PRECISION_FUNCTION,pos)
+        pos = list(map(NUMBER_PRECISION_FUNCTION,pos))
         new_vec = Vector(pos)
         new_atom = Bead(new_vec,"CA")
 #        nv = get_middlepoint(a[-1].vec,new_vec)
@@ -71,10 +71,7 @@ def read_from_pdb(filename,selected_chain=''):
 
     with open(filename) as input:
         for line in input:
-#            if "END":
-#                print "end"
             if "ENDMDL" in line:
-#                print "breakin on endlmld"
                 break
             for Ca in Calpha:
                 if Ca.match(line):
@@ -87,7 +84,7 @@ def read_from_pdb(filename,selected_chain=''):
                             a[-1].end = True
                     g = Ca.findall(line)[0]
                     if last != int(g[0]):
-                        new_vec = Vector(map(NUMBER_PRECISION_FUNCTION,g[1:]))
+                        new_vec = Vector(list(map(NUMBER_PRECISION_FUNCTION,g[1:])))
                         last = int(g[0])
                         new_atom = Bead(new_vec,"CA")
                         if a and (a[-1].end != True) and point_distance(a[-1].vec, new_vec) > 4.:
@@ -119,7 +116,7 @@ def guess_format(fname):
     Ca = re.compile("ATOM  .{7}CA.{7}([0-9 ]{4}).{4}([0-9\. -]{8})([0-9\. -]{8})([0-9\. -]{8}).{23}C")
     xyz = re.compile("^\d+\s+-*\d+\.*\d+\s+-*\d+\.*\d+\s+-*\d+\.*\d+$")
     with open(fname) as input:
-        for line in file:
+        for line in input:
             if Ca.match(line):
                 return "pdb"
             if xyz.match(line):
@@ -138,7 +135,7 @@ def read_from_xyz(filename,save=False):#,start,stop):
                 continue
             if line.strip() == "SOFTEND":
                 continue
-            line = map(NUMBER_PRECISION_FUNCTION,line.split()[1:])
+            line = list(map(NUMBER_PRECISION_FUNCTION,line.split()[1:]))
             new_vec = Vector(line)
             new_atom = Bead(new_vec,"CA")
     #        nv = get_middlepoint(a[-1].vec,new_vec)
@@ -156,7 +153,6 @@ def read_from_xyz(filename,save=False):#,start,stop):
                 else:
                     a.append(Bead(Vector(middle),"CA"))
             a.append(new_atom)
-    #    a = a[start:stop]
     for i,at in enumerate(a):
         at.setId(i)
         if i>0:

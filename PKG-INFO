@@ -1,0 +1,62 @@
+Metadata-Version: 1.0
+Name: knot_pull
+Version: 0.1.5
+Summary: Simplifier of 3D structures of molecules
+Home-page: https://github.com/dzarmola/knot_pull
+Author: Aleksandra Jarmolińska
+Author-email: a.jarmolinska@mimuw.edu.pl
+License: GNU General Public License v3 (GPLv3)
+Project-URL: documentation, https://github.com/dzarmola/knot_pull
+Description:
+        | |version| |versions| |impls| |wheel| |coverage| |br-coverage|
+
+
+        .. |version| image:: http://img.shields.io/pypi/v/intspan.svg?style=flat
+            :alt: PyPI Package latest release
+            :target: https://pypi.org/project/knot_pull
+
+        .. |versions| image:: https://img.shields.io/pypi/pyversions/intspan.svg
+            :alt: Supported versions
+            :target: https://pypi.org/project/knot_pull
+
+        .. |impls| image:: https://img.shields.io/pypi/implementation/intspan.svg
+            :alt: Supported implementations
+            :target: https://pypi.org/project/knot_pull
+
+        .. |wheel| image:: https://img.shields.io/pypi/wheel/intspan.svg
+            :alt: Wheel packaging support
+            :target: https://pypi.org/project/knot_pull
+
+        .. |coverage| image:: https://img.shields.io/badge/test_coverage-100%25-6600CC.svg
+            :alt: Test line coverage
+            :target: https://pypi.org/project/knot_pull
+
+        .. |br-coverage| image:: https://img.shields.io/badge/branch_coverage-100%25-6600CC.svg
+            :alt: Test branch coverage
+            :target: https://pypi.org/project/knot_pull
+
+        KnotPull reduces a user provided 3D structure, to simplify it,
+        while preserving the topology of the chain. It has been successfully
+        used for knot detection in proteins and chromatine chains.
+
+        It can return either a final, simplified structure, or a .pdb formatted
+        trajectory of consecutive simplifications performed.
+
+        Finally, it can give a knot type assignment (including connected knots and links)
+        of the simplified structure (using the Dowker notation for topology detection).
+
+Keywords: protein chromatine topology knot dowker
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Operating System :: OS Independent
+Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.2
+Classifier: Programming Language :: Python :: 3.3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7

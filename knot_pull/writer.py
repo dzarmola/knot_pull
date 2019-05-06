@@ -21,7 +21,7 @@ def print_out_last_pdb(handle,frames,atoms):
         id=int(id)
         chain = CHAINZ[x]
         if prev_id is not None:
-            for _ in xrange(prev_id+1,id):
+            for _ in range(prev_id+1,id):
                 out.write("ATOM  % 5d  CA  ALA %s%4d    %8.3f%8.3f%8.3f                       C\n" % (_, chain ,_,a[0],a[1],a[2]))
         out.write("ATOM  % 5d  CA  ALA %s%4d    %8.3f%8.3f%8.3f                       C\n" % (id, chain ,id,a[0],a[1],a[2]))
         prev_id = id

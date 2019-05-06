@@ -1,39 +1,47 @@
-import urllib2
+from __future__ import print_function
+#from future.standard_library import install_aliases
+#install_aliases()
+try:
+    from urllib.request import urlopen
+    from urllib.error import HTTPError, URLError
+except ImportError:
+    from urllib2 import urlopen, URLError, HTTPError
+
 import re
 
-def urlopen(address):
+def _urlopen(address):
     x = None
-    for i in xrange(3):
+    for i in range(3):
         try:
-            response = urllib2.urlopen(address)
+            response = urlopen(address)
             return response
-        except urllib2.HTTPError, e:
+        except HTTPError as e:
             x = e
             continue
-        except urllib2.URLError, e:
+        except URLError as e:
             x = e
             continue
     else:
-        raise urllib2.URLError("Error trying to connect to {}:\n{}".format(address,x))
+        raise URLError("Error trying to connect to {}:\n{}".format(address,x))
 
 
 def check_if_in_PDB(pdbId,chain):
     address="http://www.rcsb.org/pdb/rest/describeMol?structureId={PDBID}.{CHAIN}".format(CHAIN=chain,PDBID=pdbId)
-    response = urlopen(address)
+    response = _urlopen(address)
     html = response.read()
     return "polymer" in html
 
 def is_a_large_structure(pdbId):
     address="http://www.rcsb.org/pdb/rest/describeMol?structureId={PDBID}".format(PDBID=pdbId)
-    response = urlopen(address)
+    response = _urlopen(address)
     html = response.read()
     return 'largeStructure="true"' in html
 
 def get_ligands(pdbId,chain):
     address = "http://www.rcsb.org/pdb/rest/ligandInfo?structureId={PDBID}.{CHAIN}".format(CHAIN=chain, PDBID=pdbId)
-    response = urlopen(address)
+    response = _urlopen(address)
     html = response.read()
-    ligands = re.findall('chemicalID="([A-Z0-9]*)" type="non-polymer"',html)
+    ligands = re.findall('chemicalID="([A-Z0-9]*)" type="non-polymer"',html.decode('utf-8'))
     return ligands
 
 def getCifIndices(cif_read):
@@ -81,8 +89,8 @@ def get_from_afar(pdbId, chain=''):
 
 def get_particular_chain(pdbId,chain):
     address = "https://files.rcsb.org/view/{PDBID}.cif".format(PDBID=pdbId)
-    response = urlopen(address)
-    html = response.read()
+    response = _urlopen(address)
+    html = response.read().decode('utf-8')
     cif_indices = getCifIndices(html)
 
     html_coords = html.split("_atom_site.pdbx_PDB_model_num")[1].split("#")[0]
@@ -98,7 +106,7 @@ def get_particular_chain(pdbId,chain):
 
 def get_chain_list(pdbId):
     address = "https://files.rcsb.org/view/{PDBID}.cif".format(PDBID=pdbId)
-    response = urlopen(address)
+    response = _urlopen(address)
     html = response.read()
     html = html.split("_pdbx_poly_seq_scheme")[-1].split("#")[0].split("\n")[1:]
     chains = [line.split()[-3] for line in html if line]
@@ -110,7 +118,7 @@ def get_chain_list(pdbId):
 
 #def get_crystal_data(pdbId,path=''):
 #        address = "https://files.rcsb.org/view/{PDBID}.pdb".format(PDBID=pdbId)
-#        response = urlopen(address)
+#        response = _urlopen(address)
 #        crystal = []
 #        for i in response.readlines():
 #                if re.search('^(CRYST1|ORIGX.|SCALE.)' , i):
@@ -122,9 +130,8 @@ def get_chain_list(pdbId):
 #        return False
 
 if __name__=="__main__":
-
     if check_if_in_PDB("4mcb","A"):
         #print get_ligands("4mcb","A")
-        print get_particular_chain("4mcb","A")
-        print get_all_chains("4mcb")
+        print (get_particular_chain("4mcb","A"))
+        print (get_all_chains("4mcb"))
     #print check_if_in_PDB("4ola", "X")

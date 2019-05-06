@@ -1,10 +1,11 @@
+from __future__ import print_function
 import os,tempfile
 import subprocess
 
 from .vector_ops import *
 from .kpclasses import chainDeepCopy
 from .dowker_code_new import dowker_code
-from config import VERBOSE
+from .config import VERBOSE
 
 
 def run_through_hashes_wanda(atoms_lists):
@@ -16,7 +17,7 @@ def run_through_hashes_wanda(atoms_lists):
             continue
         _kfp1 = check_with_wanda(atoms)
         if int(_kfp1.strip("-").strip("+")[0]) > 6:
-            _inner_kfp = map(str, in_depth_search(atoms))
+            _inner_kfp = list(map(str, in_depth_search(atoms)))
             if len(_inner_kfp) > 1:
                  _kfp1 += "-{}(x{})".format(_inner_kfp[0], " # ".join(_inner_kfp[1:]))
         out.append(_kfp1)
@@ -48,7 +49,6 @@ def new_cell(out, i, j):
         d[out[x][y]] = d.get(out[x][y], 0) + 1
     d[0] = 0
     new = sorted(d.items(), key=lambda _: _[1], reverse=True)[0]
-    #    print new
     new = new[0] if new[1] == 3 else out[i][j]  # new[1]>=4
     return new
 
@@ -65,12 +65,12 @@ def knot_check_fnc_dowker(atoms):#deprecated
 def pretty_print(matrix):
     plen = max(max(len(str(x)) for x in y) for y in matrix)
     for row in matrix:
-        print " ".join(map(lambda x: str(x).rjust(plen),row))
+        print (" ".join(map(lambda x: str(x).rjust(plen),row)))
 
 
 def in_depth_search(atoms,knot_check_fnc=knot_check_fnc_wanda):
     """Makes a matrix of results to find overlapping topologies"""
-    out = [[0 for x in xrange(len(atoms))] for y in xrange(len(atoms))]
+    out = [[0 for x in range(len(atoms))] for y in range(len(atoms))]
     out_set = set([])
     for i in range(len(atoms) - 2):
         for j in range(i, len(atoms)):
@@ -83,15 +83,14 @@ def in_depth_search(atoms,knot_check_fnc=knot_check_fnc_wanda):
             if not out[i][j]:
                 out[i][j] = new_cell(out, i, j)
     largest = {}
-    #pretty_print(out)
     for i in range(len(atoms) - 2):
         for j in range(len(atoms) - 1, i, -1):
             _tmp = set([_ for x in out[:i + 1] for _ in x[j:]])
             if 0 not in _tmp and (len(_tmp) == 1 or (len(_tmp) == 2 and "#" in _tmp)):
                 if not (i + 1, len(out) - j) in largest:
                     largest[(i + 1, len(out) - j)] = out[i][j]
-                    for _x in xrange(i + 1):
-                        for _y in xrange(j, len(out)):
+                    for _x in range(i + 1):
+                        for _y in range(j, len(out)):
                             out[_x][_y] = "#"
     found = {}
     for (i, j), k in sorted(largest.items(), key=lambda _: _[0][0] * _[0][1], reverse=True):
@@ -122,21 +121,16 @@ def check_with_wanda(atom_list):
         try:
             int(kfp.split()[0]) #knot output should be an int
         except:
-            print "Cannot parse",kfp
-            print atom_file.name, output.name
-            raw_input("czekam na reakcje - przeczytaj outputy zanim je usune")
+            print ("Cannot parse",kfp)
+            print (atom_file.name, output.name)
+            input("czekam na reakcje - przeczytaj outputy zanim je usune")
         kfp = kfp.split()[0]
     return kfp
 
 def make_chain_neighbourhoods(chains):
-    #print vars(chains[0])
-    #print [(c,type(c)) for c in chains[0].neighbours]
     neigh = {c.chain:[_.chain for _ in c.neighbours] for c in chains}
     trans = {c.chain:c for c in chains}
-    all_chains = trans.keys()
-    #print neigh
-    #print trans
-    #print all_chains
+    all_chains = list(trans.keys())
     neighbourhoods = []
     while all_chains:
         queue = [all_chains.pop(0)]
@@ -157,14 +151,11 @@ def unentangle(chains,outfile=0):
     for chain in chains:
         #chain.wanda = run_through_hashes_wanda(chain.atom_lists)
         chain.dowker = run_through_hashes_dowker(chain.atom_lists)
-        if VERBOSE: print "Dowker for chain {}: {}".format(chain.chain,chain.dowker)
+        if VERBOSE: print ("Dowker for chain {}: {}".format(chain.chain,chain.dowker))
 
     neighs = make_chain_neighbourhoods(chains)
     if VERBOSE:
-        print "Chain neighbourhoods:", neighs
+        print ("Chain neighbourhoods:", neighs)
     #W = " U ".join("  #  ".join(x.wanda for x in neigh) for neigh in neighs)
     D = "  U  ".join(" # ".join("[{}]{}".format(x.dowker,x.chain_name) for x in neigh) for neigh in neighs)
-
-    #print "Wanda says",W
-    #print "Final topology:",D
     return D

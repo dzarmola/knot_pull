@@ -1,7 +1,8 @@
+from __future__ import print_function
 from numpy import array as Vector
 
-from vector_ops import *
-from kpclasses import Bead,chainDeepCopy
+from .vector_ops import *
+from .kpclasses import Bead,chainDeepCopy
 from .writer import *
 from .reader import *
 from .config import EPSILON,VERBOSE
@@ -209,7 +210,7 @@ def run_through_filtering(atoms, outfile, greedy=0, greedy_file="",trajectory=Tr
                 atoms_num = len(set(_.tuple() for _ in atoms))
                 frames_without_shortening = 0
             if frames_without_shortening > 2*len(atoms):
-                if VERBOSE: print "Breaking filtering due to to not enough change"
+                if VERBOSE: print ("Breaking filtering due to to not enough change")
                 break
 
         if outfile and trajectory:
@@ -220,13 +221,13 @@ def run_through_filtering(atoms, outfile, greedy=0, greedy_file="",trajectory=Tr
 #    frames.append([(x.original_id, x.vec) for x in atoms])
 
     if VERBOSE:
-        print "Finished filtering, have {} atoms".format(len(atoms))
+        print ("Finished filtering, have {} atoms".format(len(atoms)))
 
     if greedy: #reduce number of atoms (improves topology detection)
         atoms, _ = filter_greedy(atoms, greedy_file, len(frames))
         frames.append([(x.original_id, x.vec, x.end) for x in atoms])
         if VERBOSE:
-            print "Finished greedy filtering, have {} atoms".format(len(atoms))
+            print ("Finished greedy filtering, have {} atoms".format(len(atoms)))
 
     if trajectory and outfile:
         print_out_last_pdb(outfile, frames, atoms)
@@ -235,8 +236,7 @@ def run_through_filtering(atoms, outfile, greedy=0, greedy_file="",trajectory=Tr
 
 def run_through_division(atoms):
     """Finds connections which can be safely cut (connected segments can't be simplified even separately) """
-    # print "Safe to cut (if any):",
-    if VERBOSE: print "Starting with {} atoms".format(len(atoms))
+    if VERBOSE: print ("Starting with {} atoms".format(len(atoms)))
     cuts = []
     for i in range(1, len(atoms) - 2):  # No sense in checking last edges
         j = i + 1
@@ -252,7 +252,7 @@ def run_through_division(atoms):
     cuts = [0] + cuts + [len(atoms) - 1]  # fix to get proper segment indices
     atom_lists = []
 
-    for i in xrange(0, len(cuts) - 1):
+    for i in range(0, len(cuts) - 1):
         cutl = cuts[i]
         cutr = cuts[i + 1]
         lista = []
@@ -276,11 +276,9 @@ def pull(atoms, outfile, greedy=0, greedy_file="",trajectory=True,quiet=False, c
     model_num = len(frames)+1
     separate_chains = divide_into_bead_chains(atoms)
     for c, chain in enumerate(separate_chains):
-        #print "chain", c
         ch = Chain(c,chain)
         if chain_names: ch.setChainName(chain_names[c])
         if outfile:
-            #print "Have",ch.atom_lists,"groups"
             if not quiet: model_num = ch.print2file(model_num,outfile)
         chains.append(ch)
 
@@ -339,7 +337,7 @@ if __name__ == "__main__":
         atoms = input.readlines()
     if len(sys.argv) > 2:
         atoms = atoms[int(sys.argv[2]):int(sys.argv[3]) + 1]
-    print "Result is", run_through_filtering(atoms, sys.argv[1] + (
-        "{}_{}".format(sys.argv[2], sys.argv[3]) if len(sys.argv) > 2 else "") + ".outall.pdb")
+    print ("Result is", run_through_filtering(atoms, sys.argv[1] + (
+        "{}_{}".format(sys.argv[2], sys.argv[3]) if len(sys.argv) > 2 else "") + ".outall.pdb"))
 
 

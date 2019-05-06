@@ -1,6 +1,8 @@
+from __future__ import print_function
+
 from .vector_ops import *
 from .config import VERBOSE
-from .kpclasses import Code, Crossing
+from .kpclasses import Code, Crossing, CodeHistory
 
 
 
@@ -66,7 +68,7 @@ def add(x,y):
 
 def index(lista, co):
     """.index with on absolute values"""
-    for i in xrange(len(lista)):
+    for i in range(len(lista)):
         if abs(lista[i]) == co:
             return i
     else:
@@ -94,9 +96,9 @@ def get_dt_code(atoms):
     cnt = 1
     crosses = {}
     code = Code()
-    for l in xrange(len(atoms) - 1):
+    for l in range(len(atoms) - 1):
         this_cross = []
-        for k in xrange(len(atoms) - 1):
+        for k in range(len(atoms) - 1):
             if l == k or abs(l - k) == 1: continue
             line1 = [atoms[l], atoms[l + 1]]
             line2 = [atoms[k], atoms[k + 1]]
@@ -109,7 +111,10 @@ def get_dt_code(atoms):
                 val = -1
             crosses[tuple(sorted([l, k]))] = crosses.get(tuple(sorted([l, k])), []) + [cnt * val]
             cnt += 1
-    code.read_in(crosses.values())
+    crossings = list(zip(*sorted(crosses.items(), key=lambda x:x[1])))[1]
+    if VERBOSE: print("Reading crosses:",crossings)
+    code.read_in(crossings)
+    #code.read_in(crosses.values())
     return code
 
 
@@ -139,7 +144,7 @@ def issublistof(overlist,sublist):
 def is_permuted(lista,code_len):
     sl = sorted(lista)
     if issublistof(lista+lista,sl):
-        return all(sl[i+1]-sl[i] in [2,(code_len-(len(sl)-1))*2] for i in xrange(len(sl)-1))
+        return all(sl[i+1]-sl[i] in [2,(code_len-(len(sl)-1))*2] for i in range(len(sl)-1))
     return False
 
 
@@ -163,20 +168,21 @@ def find_permutations_in(code):
     i = 0
     while i<lc:
         j=i+3
-        if None not in dbcode[i:j] and is_permuted(dbcode[i:j],max(dbcode)/2):
-            while j-(i-1)<=len(code) and None not in dbcode[i-1:j] and is_permuted(dbcode[i - 1:j],max(dbcode)/2):
-                i -= 1
-            while j+1-i<=len(code) and None not in dbcode[i:j+1] and is_permuted(dbcode[i:j + 1],max(dbcode)/2):
-                j += 1
-            if len(filter(lambda x: x is not None, dbcode)) - (j-i)*2 in [1,2]:
-                i=j-1
+        if None not in dbcode[i:j]:
+            if is_permuted(dbcode[i:j],max(filter(lambda x:x is not None,dbcode))/2):
+                while j-(i-1)<=len(code) and None not in dbcode[i-1:j] and is_permuted(dbcode[i - 1:j],max(dbcode)/2):
+                    i -= 1
+                while j+1-i<=len(code) and None not in dbcode[i:j+1] and is_permuted(dbcode[i:j + 1],max(dbcode)/2):
+                    j += 1
+                if len(list(filter(lambda x: x is not None, dbcode))) - (j-i)*2 in [1,2]:
+                    i=j-1
+                    continue
+                subcodes.append(dbcode[i:j])
+                for _ in range(i,j):
+                    dbcode[_] = None
+                    dbcode[(_+lc)%(lc*2)] = None
+                i=0
                 continue
-            subcodes.append(dbcode[i:j])
-            for _ in xrange(i,j):
-                dbcode[_] = None
-                dbcode[(_+lc)%(lc*2)] = None
-            i=0
-            continue
         i+=1
     dbcode = dbcode[:lc]
     if None in dbcode and dbcode[-1] != None:
@@ -184,7 +190,7 @@ def find_permutations_in(code):
             dbcode.append(dbcode.pop(0))
     rest = list(splitz(dbcode, None))
     subcodes += rest
-    subcodes = map(renumber_dt_list,subcodes)
+    subcodes = list(map(renumber_dt_list,subcodes))
     return subcodes
 
 
@@ -391,7 +397,7 @@ def dowker_dbl_loops(code):
         else:
             b=1
 
-    trash = sorted(trash)
+    #trash = sorted(trash)
     ch = bool(trash) or changed
     if trash: 
         code.remove(*trash)
@@ -432,7 +438,7 @@ def third_redei(code):
                                 _3 = Crossing(c.val, f.top, d.val, e.top)
                             else:
                                 _3 = Crossing(c.val, e.top, d.val, f.top)
-                        if VERBOSE: print "was",v1,v2,our_cross, "will be",_1,_2,_3
+                        if VERBOSE: print( "was",v1,v2,our_cross, "will be",_1,_2,_3)
                         changed = True
                         code.pop(v1)
                         code.pop(v2)
@@ -445,10 +451,10 @@ def third_redei(code):
 def fix_dbl_loop(code, dbl_loops):
     """Corrects numbering after removing dbl loop"""
     m = (len(code) + len(dbl_loops) * 2) * 2
-    ad = [0 for _ in xrange(m)]
+    ad = [0 for _ in range(m)]
     for loop in dbl_loops:
         for p in flatten(loop):
-            for _ in xrange(p, m + 1):
+            for _ in range(p, m + 1):
                 ad[_ - 1] += 1
     for k, v in enumerate(code):
         v = [add(v[0], ad[abs(v[0]) - 1]), add(v[1], ad[abs(v[1]) - 1])]
@@ -456,10 +462,10 @@ def fix_dbl_loop(code, dbl_loops):
 
 
 def just_one_in(loop,l):
-    return (l[0] in range(loop.min(),loop.max())) != (l[1] in range(loop.min(), loop.max()))
+    return (l[0] in range(loop.min().val,loop.max().val)) != (l[1] in range(loop.min().val, loop.max().val))
 
 def both_in(loop,l):
-    return (l[0] in range(loop.min(),loop.max())) and (l[1] in range(loop.min(), loop.max()))
+    return (l[0] in range(loop.min().val,loop.max().val)) and (l[1] in range(loop.min().val, loop.max().val))
 
 
 def can_be_untwisted(code):
@@ -493,10 +499,10 @@ def dowker_loop(code):
 def fix_loop(code, loops):
     """Corrects numbering after removing single loop"""
     m = (len(code) + len(loops)) * 2
-    ad = [0 for _ in xrange(m)]
+    ad = [0 for _ in range(m)]
     for loop in loops:
         for p in loop:
-            for _ in xrange(p, m + 1):
+            for _ in range(p, m + 1):
                 ad[_ - 1] += 1
     for i, v in enumerate(code):
         if ad[abs(v[0]) - 1]%2:
@@ -536,29 +542,35 @@ def dowker_code(atoms, from_atoms=True):
     changed = 1
     dc = code
     dc.check_yo()
+    history = CodeHistory()
+    history.add(dc)
+    if VERBOSE: print("code",code)
     while changed and dc.dowker_code():
         changed = dowker_loop(dc)
         dc.check_yo()
-        if VERBOSE: print "single",dc
+        if VERBOSE: print( "single",dc)
         changed = dowker_dbl_loops(dc) or changed  # if not loops else False #bo po co liczyc na zapas
         dc.check_yo()
-        if VERBOSE: print "double",dc
+        if VERBOSE: print ("double",dc)
         changed = can_be_untwisted(dc) or changed  # if not loops else False #bo po co liczyc na zapas
         dc.check_yo()
         #        fix_dbl_loop(dc, dbl_loops)
-        if VERBOSE: print "untwist", dc
+        if VERBOSE: print ("untwist", dc)
         changed2 = unfurl(dc)
         dc.check_yo()
-        if VERBOSE: print "unfurl",dc
+        if VERBOSE: print ("unfurl",dc)
         changed = changed or changed2
         dc.check_yo()
         while changed2:
             changed2 = unfurl(dc)
             dc.check_yo()
-            if VERBOSE: print "unfurl",dc
+            if VERBOSE: print ("unfurl",dc)
         changed = changed or third_redei(dc)
         dc.check_yo()
-    if VERBOSE: print "Finally",dc
+        if not history.add(dc):
+            break
+
+    if VERBOSE: print ("Finally",dc)
 
     if not dc.dowker_code():
         return "01"
@@ -570,34 +582,36 @@ def dowker_code(atoms, from_atoms=True):
     while changed and dc.dowker_code():
         changed = dowker_loop(dc)
         dc.check_yo()
-        if VERBOSE: print "single",dc
+        if VERBOSE: print ("single",dc)
         changed = dowker_dbl_loops(dc) or changed  # if not loops else False #bo po co liczyc na zapas
         dc.check_yo()
-        if VERBOSE: print "double",dc
+        if VERBOSE: print ("double",dc)
         changed = can_be_untwisted(dc) or changed  # if not loops else False #bo po co liczyc na zapas
         dc.check_yo()
         #        fix_dbl_loop(dc, dbl_loops)
-        if VERBOSE: print "untwist", dc
+        if VERBOSE: print ("untwist", dc)
         changed2 = unfurl(dc)
         dc.check_yo()
-        if VERBOSE: print "unfurl",dc
+        if VERBOSE: print ("unfurl",dc)
         changed = changed or changed2
         while changed2:
             changed2 = unfurl(dc)
             dc.check_yo()
-            if VERBOSE: print "unfurl",dc
+            if VERBOSE: print ("unfurl",dc)
         changed = changed or third_redei(dc)
         dc.check_yo()
-    if VERBOSE: print "Finally",dc
+        if not history.add(dc):
+            break
+    if VERBOSE: print ("Finally",dc)
 
     if not dc.dowker_code():
         return "01"
 
     sub_codes = find_permutations_in(dc.dowker_code())
-    if VERBOSE: print sub_codes
+    if VERBOSE: print (sub_codes)
 
     translated = translate_dt_list(sub_codes)
-    if VERBOSE: print translated
+    if VERBOSE: print (translated)
 
     return translated
 
