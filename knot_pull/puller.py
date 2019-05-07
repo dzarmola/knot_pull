@@ -316,6 +316,7 @@ class Chain:
         self.closing_paths = [closeTheCurve(a) for a in self.atom_lists]
         self.wanda = None
         self.dowker = None
+        self.dowker_code = None
         self.chain_name = ""
 
     def setChainName(self,c):

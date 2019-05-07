@@ -7,7 +7,7 @@ with open("README.rst", "r") as fh:
 
 setuptools.setup(
     name="knot_pull",
-    version="0.1.7",
+    version="0.1.8",
     author="Aleksandra Jarmolinska",
     author_email="dzarmola@gmail.com",
     description="Simplifier of 3D structures of molecules",

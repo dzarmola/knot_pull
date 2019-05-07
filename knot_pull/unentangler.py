@@ -26,13 +26,15 @@ def run_through_hashes_wanda(atoms_lists):
 def run_through_hashes_dowker(atoms_lists):
     """For each atom list """
     out = []
+    out_full = []
     for x, atoms in enumerate(atoms_lists):
         if len(atoms) < 5:
             out.append("01")
             continue
-        dowker = dowker_code(atoms)
+        dowker,code = dowker_code(atoms)
         out.append(dowker)
-    return " # ".join(out)
+        out_full.append(str(code))
+    return " # ".join(out)," # ".join(out_full)
 
 def neigh(i, j, n):
     ns = []
@@ -150,7 +152,7 @@ def unentangle(chains,outfile=0):
     """Finds all non-interlocking segments, then runs knot detection"""
     for chain in chains:
         #chain.wanda = run_through_hashes_wanda(chain.atom_lists)
-        chain.dowker = run_through_hashes_dowker(chain.atom_lists)
+        chain.dowker,chain.dowker_code = run_through_hashes_dowker(chain.atom_lists)
         if VERBOSE: print ("Dowker for chain {}: {}".format(chain.chain,chain.dowker))
 
     neighs = make_chain_neighbourhoods(chains)
@@ -158,4 +160,5 @@ def unentangle(chains,outfile=0):
         print ("Chain neighbourhoods:", neighs)
     #W = " U ".join("  #  ".join(x.wanda for x in neigh) for neigh in neighs)
     D = "  U  ".join(" # ".join("[{}]{}".format(x.dowker,x.chain_name) for x in neigh) for neigh in neighs)
-    return D
+    C = "  U  ".join(" # ".join("[{}]{}".format(x.dowker_code,x.chain_name) for x in neigh) for neigh in neighs)
+    return D,C

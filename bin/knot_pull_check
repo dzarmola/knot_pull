@@ -131,7 +131,9 @@ def main():
 
     if atoms and CONFIG['CHECK_KNOT']:
         if not CONFIG['QUIET']: print ("Final topology:",sep="")
-        print (unentangle(chains, outfile=0))
+        topo, dt_code = unentangle(chains, outfile=0)
+        print (topo)
+        if not CONFIG['QUIET']: print("#DT codes:", dt_code)
 
     if args.output:
         output.close()

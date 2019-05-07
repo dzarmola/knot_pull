@@ -673,7 +673,7 @@ def dowker_code(atoms, from_atoms=True):
     translated = translate_dt_list(sub_codes)
     if VERBOSE: print (translated)
 
-    return translated
+    return translated,sub_codes
 
 if __name__ == "__main__":
     #import sys
