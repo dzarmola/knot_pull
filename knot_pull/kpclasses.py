@@ -1,5 +1,7 @@
 
+from __future__ import print_function
 from .vector_ops import point_distance
+
 
 class VectorN(object):
     def __init__(self,*args):
@@ -197,6 +199,10 @@ class Crossing(object):
     def has_values(self,tup):
         return self.l1.val!=self.l2.val and self.l1.val in tup and self.l2.val in tup
 
+class DowkerError(ValueError):
+    """ Raised when Dowker code cannot be corrected """
+    pass
+
 class Code(object):
     def __init__(self):
         self.crossings = []
@@ -237,6 +243,19 @@ class Code(object):
     def add(self,cr):
         self.crossings.append(cr)
 
+    def make_way(self,i):
+        for c in self.crossings:
+            if c.l1.val >= i: c.l1.val += 1
+            if c.l2.val >= i: c.l2.val += 1
+
+    def smart_add(self,cr):
+        for c in self.crossings:
+            if c.l1.val >= cr.min().val: c.l1.val += 1
+            if c.l1.val >= cr.max().val: c.l1.val += 1
+            if c.l2.val >= cr.min().val: c.l2.val += 1
+            if c.l2.val >= cr.max().val: c.l2.val += 1
+        self.crossings.append(cr)
+
     def pop(self,cr):
         id = cr if type(cr) == type(1) else self.crossings.index(cr)
         self.crossings.pop(id)
@@ -248,10 +267,43 @@ class Code(object):
         for cr in self.crossings:
             cr.remove_previous(*vals)
 
+    def find_error(self, omc_inserted):
+        smax = len(self.crossings)*2
+        values = list(range(1,smax+2+1))
+        for c1,c2 in self.crossings:
+            _c1,_c2 = c1.val,c2.val
+            if _c1>=omc_inserted: _c1+=1
+            if _c2>=omc_inserted: _c2+=1
+            if _c1%2!=_c2%2: #correct
+                values = list(filter(lambda x: x <= _c1 or  x > _c2, values))
+            else:
+                values = list(filter(lambda x: _c1 < x <= _c2, values))
+        values = list(values)
+        if len(values) == 1:
+                return values[0]
+        else:
+                raise DowkerError("cannot correct the code", self.crossings, values)
+
     def remove(self,*cr):
         vals = []
+        indices = []
         for c in cr:
             id = c if type(c) == type(1) else self.crossings.index(c)
+            vals += self.crossings[id].values()
+            indices.append(id)
+        for id in sorted(indices,reverse=True):
+            self.crossings.pop(id)
+        for cr in self.crossings:
+            cr.remove_previous(*vals)
+
+    def find_and_remove(self,*cr):
+        vals = []
+        for c in cr:
+            for id,_ in enumerate(self.crossings):
+                if set(c.values()) == set(_.values()):
+                    break
+            else:
+                raise ValueError("{} is not in {}".format(c,self.crossings))
             vals += self.crossings[id].values()
             self.crossings.pop(id)
         for cr in self.crossings:
@@ -302,15 +354,22 @@ class Code(object):
             val = fw[1] + (fw[1]-dt[0])
         elif abs(fw[1] - dt[1]) == 1:
             val = fw[1] + (fw[1] - dt[1])
-        elif abs(fw[0] - dt[1]):
+        elif abs(fw[0] - dt[1]) == 1:
             val = fw[0] + (fw[0] - dt[1])
         else:
             return None
         val = val%(len(self.crossings)*2)
+        if not val: val = len(self.crossings)*2
         for c in self.crossings:
             if val in c:
                 return c
         return None
+
+    def pullulate(self):
+        _copy = Code()
+        for l1,l2 in self.crossings:
+            _copy.add(Crossing(l1.val,l1.top,l2.val,l2.top))
+        return _copy
 
 class CodeHistory(object):
     def __init__(self):

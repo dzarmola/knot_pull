@@ -2,12 +2,12 @@
 
 import setuptools
 
-with open("README.md", "r") as fh:
+with open("README.rst", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="knot_pull",
-    version="0.1.6",
+    version="0.1.7",
     author="Aleksandra Jarmolinska",
     author_email="dzarmola@gmail.com",
     description="Simplifier of 3D structures of molecules",

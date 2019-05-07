@@ -112,9 +112,9 @@ def main():
         output = sys.stdout
     elif args.output is None:
         output = infile.replace("xyz","pdb").replace(".pdb","_out.pdb")
-        output = open(output, "w", 0)
+        output = open(output, "w")
     else:
-        output = open(output, "w", 0)
+        output = open(output, "w")
 
     chains = pull(atoms, output, greedy=CONFIG["GREEDY"], greedy_file=output,trajectory=CONFIG['TRAJECTORY'],
                   quiet=CONFIG['QUIET'], chain_names=cnames)
@@ -123,7 +123,7 @@ def main():
 
     if args.save is None:
         out = "SAVE_" + infile.replace(".pdb", "_out.pdb").replace(".xyz", "_out.xyz")
-        out = open(out, "w" ,0)
+        out = open(out, "w" )
         for c in chains:
             for alist in c.atom_lists:
                 write_xyz(out, alist)#,soft_end=True)

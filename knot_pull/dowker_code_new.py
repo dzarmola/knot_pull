@@ -2,7 +2,7 @@ from __future__ import print_function
 
 from .vector_ops import *
 from .config import VERBOSE
-from .kpclasses import Code, Crossing, CodeHistory
+from .kpclasses import Code, Crossing, CodeHistory, DowkerError
 
 
 
@@ -303,105 +303,162 @@ def dowker_dbl_loops(code):
     """Finds a loop crossing either over or under a line, brings it back
     (both crossing on the same side of the line)"""
     trash = set([])
-    b=1
     changed = 0
-    for k1, v1 in enumerate(code):
-      if b:
+
+    found = 1
+    while found:
+        found = 0
+        for k1, v1 in enumerate(code):
+            if found: break
+            for k2, v2 in enumerate(code[k1 + 1:]):
+                if same_side_cross(v1, v2):
+                    if both_neighbours(v1, v2, len(code)):
+                        if VERBOSE: print("Removing {} {} from {}: ".format(v1, v2, code))
+                        code.remove(v1,v2)
+                        if VERBOSE: print("{}".format(code))
+                        changed = True
+                        found = True
+                        break
+
+    found = 1
+    while found:
+      found = 0
+      for k1, v1 in enumerate(code):
+        if found:
+            break
         for k2, v2 in enumerate(code[k1+1:]):
-                # mam dwa sasiadujace punkty
             if v1 in trash or v2 in trash:
                 continue
-            if same_side_cross(v1, v2):
-                if both_neighbours(v1,v2,len(code)):
-                    trash.add(v1)
-                    trash.add(v2)
-                    break
+            if same_side_cross(v1, v2) and min(map(abs,[v1[0]-v2[0],v1[0]-v2[1],v1[1]-v2[0],v1[1]-v2[1]]))==1: #are neighbours
+                v1_neigh = code.different_neighbour(v1,v2)
+                v2_neigh = code.different_neighbour(v2, v1)
+                v1_loop_val = v1.min() if abs(v1.min()-v2.min())==1 or abs(v1.min()-v2.max())==1 else v1.max()
+                v2_loop_val = v2.min() if abs(v1.min()-v2.min())==1 or abs(v1.max()-v2.min())==1 else v2.max()
+                if v2_loop_val < v1_loop_val:
+                    v1,v2 = v2,v1
+                    v1_loop_val, v2_loop_val = v2_loop_val, v1_loop_val
+                if not same_side_cross(v2,v2_neigh): #tylko nastepnik? # not (same_side_cross(v1, v1_neigh) or same_side_cross(v2, v2_neigh)):
+                    sstop = v1_loop_val.top
+                    ssn = code.different_neighbour(v2,v1)
+                    if ssn.min() < v1_loop_val < v2_loop_val < ssn.max():
+                        sswhich = 0 if abs(ssn[0]-v2_loop_val) == 1 else 1
+                        try:
+                            progeny = code.pullulate()
+                            pssn = progeny.different_neighbour(v2, v1)
+                            progeny.find_and_remove(v1,v2)
+                            #progeny.find_and_remove(v2)
+                            pnewss = pssn[sswhich].val
+                            pnewss2 = progeny.find_error(pnewss)
+                            progeny.make_way(pnewss)
+                            progeny.make_way(pnewss2)
+                            if pnewss2 <= pnewss: pnewss += 1
+                            new = Crossing(pnewss, sstop, pnewss2, not sstop)
+                            progeny.add(new)
 
-    b=not bool(trash)
-    for k1, v1 in enumerate(code):
-      if b:
-        for k2, v2 in enumerate(code[k1+1:]):
-            if v1 in trash or v2 in trash:
-                continue
-            if same_side_cross(v1, v2):
-                if not both_neighbours(v1,v2,len(code)):
-                    v1_neigh = code.different_neighbour(v1,v2)
-                    v2_neigh = code.different_neighbour(v2, v1)
-                    if v2.min() - v1.min() == v2.max()-v1.max() and (v2.min()- v1.max() ==1 or v1.min()-v2.max() == 1) \
-                        and not (v1.min() < v2.min() < v1.max() or v2.min() < v1.min() < v2.max() ): #TODO add wraparound
-                        if same_side_cross(v1,v1_neigh) != same_side_cross(v2,v2_neigh): #if just one - can do this
-                            pass
-                            """trash.add(v1)
-                            trash.add(v2)
-                            b=0
-                            print "adding", v1_neigh, v1, v2, v2_neigh
-                            print v1.min(),v1.max(),v2.min(),v2.max()
-                            break"""
-                            #wywalam bo psulo (-4,11),(3,-12),(-2,7),(1,-8),(6,.9),(-10,13),(.5,14)
-                        elif same_side_cross(v1,v1_neigh) and same_side_cross(v2,v2_neigh):
-                            trash.add(v1)
-                            trash.add(v2)
-                            trash.add(v1_neigh)
-                            trash.add(v2_neigh)
-                            px=v1
-                            py=v2
-                            x=v1_neigh
-                            y=v2_neigh
-                            nx = code.different_neighbour(x,px)
-                            ny = code.different_neighbour(y,py)
-                            while same_side_cross(x,nx) and same_side_cross(y,ny): ### @TODO check how long
-                                trash.add(nx)
-                                trash.add(ny)
-                                px=x
-                                x=nx
-                                py=y
-                                y=ny
-                                nx = code.different_neighbour(x, px)
-                                ny = code.different_neighbour(y, py)
-
-                            b=0
-                            break
-                        else: #both neighbours differ
-                            a,b = v1.even(),v2.uneven()
-                            c,d = v1.uneven(),v2.even()
-                            if abs(a-b)!=1:
-                                a,b = v1.uneven(),v2.even()
-                                c,d = v1.even(),v2.uneven()
-                            #now we find the previous corssing
-                            for cr in code:
-                                if c-1 in cr and d-1 in cr:
-                                    break
-                            else:
-                                break #there is no previous crossing
-                            _1 = Crossing(a.val,a.top,cr.even().val if a%2 else cr.uneven().val,not a.top)
-                            _2 = Crossing(b.val,b.top,cr.uneven().val if a%2 else cr.even().val,not b.top)
-                            e,f = cr
-                            if e>f:
-                                if c>d:
-                                    _3 = Crossing(c.val,e.top,d.val,f.top)
-                                else:
-                                    _3 = Crossing(c.val,f.top,d.val,e.top)
-                            else:
-                                if c>d:
-                                    _3 = Crossing(c.val,f.top,d.val,e.top)
-                                else:
-                                    _3 = Crossing(c.val,e.top,d.val,f.top)
-                            code.pop(v1)
-                            code.pop(v2)
-                            code.pop(cr)
-                            code.add(_1)
-                            code.add(_2)
-                            code.add(_3)
+                            code.remove(v1)
+                            code.remove(v2)
+                            newss = ssn[sswhich].val
+                            newss2 = code.find_error(newss)
+                            code.make_way(newss)
+                            code.make_way(newss2)
+                            if newss2 <= newss: newss += 1
+                            new = Crossing(newss,sstop,newss2,not sstop)
+                            code.add(new)
+                            found = 1
                             changed = 1
                             break
-        else:
-            b=1
+                        except DowkerError as e:
+                            if VERBOSE: print(e)
+                            continue
+
+    found = 1
+    while found:
+        found =0
+        for k1, v1 in enumerate(code):
+            if found: break
+            for k2, v2 in enumerate(code[k1+1:]):
+                if v1 in trash or v2 in trash:
+                    continue
+                if same_side_cross(v1, v2):
+                    if not both_neighbours(v1,v2,len(code)):
+                        v1_neigh = code.different_neighbour(v1,v2)
+                        v2_neigh = code.different_neighbour(v2, v1)
+                        if v2.min() - v1.min() == v2.max()-v1.max() and (v2.min()- v1.max() ==1 or v1.min()-v2.max() == 1) \
+                            and not (v1.min() < v2.min() < v1.max() or v2.min() < v1.min() < v2.max() ): #TODO add wraparound
+                            if same_side_cross(v1,v1_neigh) != same_side_cross(v2,v2_neigh): #if just one - can do this
+                                pass
+                                """trash.add(v1)
+                                trash.add(v2)
+                                b=0
+                                print "adding", v1_neigh, v1, v2, v2_neigh
+                                print v1.min(),v1.max(),v2.min(),v2.max()
+                                break"""
+                                #wywalam bo psulo (-4,11),(3,-12),(-2,7),(1,-8),(6,.9),(-10,13),(.5,14)
+                            elif same_side_cross(v1,v1_neigh) and same_side_cross(v2,v2_neigh):
+                                trash.add(v1)
+                                trash.add(v2)
+                                trash.add(v1_neigh)
+                                trash.add(v2_neigh)
+                                px=v1
+                                py=v2
+                                x=v1_neigh
+                                y=v2_neigh
+                                nx = code.different_neighbour(x,px)
+                                ny = code.different_neighbour(y,py)
+                                while same_side_cross(x,nx) and same_side_cross(y,ny): ### @TODO check how long
+                                    trash.add(nx)
+                                    trash.add(ny)
+                                    px=x
+                                    x=nx
+                                    py=y
+                                    y=ny
+                                    nx = code.different_neighbour(x, px)
+                                    ny = code.different_neighbour(y, py)
+
+                                code.remove(*trash)
+                                found = 1
+                                changed = 1
+                                break
+                            else: #both neighbours differ
+                                a,b = v1.even(),v2.uneven()
+                                c,d = v1.uneven(),v2.even()
+                                if abs(a-b)!=1:
+                                    a,b = v1.uneven(),v2.even()
+                                    c,d = v1.even(),v2.uneven()
+                                #now we find the previous corssing
+                                for cr in code:
+                                    if c-1 in cr and d-1 in cr:
+                                        break
+                                else:
+                                    break #there is no previous crossing
+                                _1 = Crossing(a.val,a.top,cr.even().val if a%2 else cr.uneven().val,not a.top)
+                                _2 = Crossing(b.val,b.top,cr.uneven().val if a%2 else cr.even().val,not b.top)
+                                e,f = cr
+                                if e>f:
+                                    if c>d:
+                                        _3 = Crossing(c.val,e.top,d.val,f.top)
+                                    else:
+                                        _3 = Crossing(c.val,f.top,d.val,e.top)
+                                else:
+                                    if c>d:
+                                        _3 = Crossing(c.val,f.top,d.val,e.top)
+                                    else:
+                                        _3 = Crossing(c.val,e.top,d.val,f.top)
+                                code.pop(v1)
+                                code.pop(v2)
+                                code.pop(cr)
+                                code.add(_1)
+                                code.add(_2)
+                                code.add(_3)
+                                changed = 1
+                                found = 1
+                                break
+            #else:
+            #    b=1
 
     #trash = sorted(trash)
-    ch = bool(trash) or changed
-    if trash: 
-        code.remove(*trash)
-    return ch
+
+    return changed
 
 def third_redei(code):
     changed = False
@@ -447,7 +504,8 @@ def third_redei(code):
                         code.add(_2)
                         code.add(_3)
                         return changed # added 11.02
-    #return changed
+    return changed
+
 def fix_dbl_loop(code, dbl_loops):
     """Corrects numbering after removing dbl loop"""
     m = (len(code) + len(dbl_loops) * 2) * 2
@@ -548,26 +606,28 @@ def dowker_code(atoms, from_atoms=True):
     while changed and dc.dowker_code():
         changed = dowker_loop(dc)
         dc.check_yo()
-        if VERBOSE: print( "single",dc)
+        if VERBOSE: print( "single",dc,changed)
         changed = dowker_dbl_loops(dc) or changed  # if not loops else False #bo po co liczyc na zapas
         dc.check_yo()
-        if VERBOSE: print ("double",dc)
+        if VERBOSE: print ("double",dc,changed)
         changed = can_be_untwisted(dc) or changed  # if not loops else False #bo po co liczyc na zapas
         dc.check_yo()
         #        fix_dbl_loop(dc, dbl_loops)
-        if VERBOSE: print ("untwist", dc)
+        if VERBOSE: print ("untwist", dc,changed)
         changed2 = unfurl(dc)
         dc.check_yo()
-        if VERBOSE: print ("unfurl",dc)
+        if VERBOSE: print ("unfurl",dc,changed2)
         changed = changed or changed2
         dc.check_yo()
         while changed2:
             changed2 = unfurl(dc)
             dc.check_yo()
-            if VERBOSE: print ("unfurl",dc)
+            if VERBOSE: print ("unfurl",dc,changed2)
         changed = changed or third_redei(dc)
         dc.check_yo()
+        if VERBOSE: print("3rd redei", dc, changed)
         if not history.add(dc):
+            if VERBOSE: print("Nothing changed, changing perspective")
             break
 
     if VERBOSE: print ("Finally",dc)
