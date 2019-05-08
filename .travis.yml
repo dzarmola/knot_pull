@@ -48,12 +48,12 @@ matrix:
   - os: osx
     language: generic
     env: TOXENV=py27
-  - os: osx
-    language: generic
-    env: TOXENV=py35
-  - os: osx
-    language: generic
-    env: TOXENV=py36
+#  - os: osx
+#    language: generic
+#    env: TOXENV=py35
+#  - os: osx
+#    language: generic
+#    env: TOXENV=py36
   - os: osx
     language: generic
     env: TOXENV=py37
@@ -64,6 +64,7 @@ matrix:
 
 install:
   - pip install pipenv
+  - pipenv install nose
   - pipenv install --dev --skip-lock
 
 script:
@@ -81,3 +82,4 @@ deploy:
   on:
     branch: master
     python: 3.7
+    dist: xenial

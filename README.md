@@ -12,18 +12,14 @@
         <td><img src='https://codecov.io/gh/dzarmola/knot_pull/branch/master/graph/badge.svg'></td>
     </tr>
     <tr>
-        <td>Wheel</td>
-        <td><img src='https://img.shields.io/pypi/wheel/knot_pull.svg'></td>
-        <td>Implementation</td>
-        <td><img src='https://img.shields.io/pypi/implementation/knot_pull.svg'></td>
-    </tr>
-    <tr>
         <td>Status</td>
         <td><img src='https://img.shields.io/pypi/status/knot_pull.svg'></td>
         <td>Downloads</td>
         <td><img src='https://img.shields.io/pypi/dm/knot_pull.svg'></td>
     </tr>
     <tr>
+        <td>Wheel</td>
+        <td><img src='https://img.shields.io/pypi/wheel/knot_pull.svg'></td>
         <td>Supported versions</td>
         <td><img src='https://img.shields.io/pypi/pyversions/knot_pull.svg'></td>
     </tr>
