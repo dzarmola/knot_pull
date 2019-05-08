@@ -29,21 +29,21 @@ def _urlopen(address):
 def check_if_in_PDB(pdbId,chain):
     address="http://www.rcsb.org/pdb/rest/describeMol?structureId={PDBID}.{CHAIN}".format(CHAIN=chain,PDBID=pdbId)
     response = _urlopen(address)
-    html = response.read()
+    html = response.read().decode('utf-8')
     return "polymer" in html
 
 
 def is_a_large_structure(pdbId):
     address="http://www.rcsb.org/pdb/rest/describeMol?structureId={PDBID}".format(PDBID=pdbId)
     response = _urlopen(address)
-    html = response.read()
+    html = response.read().decode('utf-8')
     return 'largeStructure="true"' in html
 
 
 def get_ligands(pdbId,chain):
     address = "http://www.rcsb.org/pdb/rest/ligandInfo?structureId={PDBID}.{CHAIN}".format(CHAIN=chain, PDBID=pdbId)
     response = _urlopen(address)
-    html = response.read()
+    html = response.read().decode('utf-8')
     ligands = re.findall('chemicalID="([A-Z0-9]*)" type="non-polymer"',html.decode('utf-8'))
     return ligands
 
@@ -111,7 +111,7 @@ def get_particular_chain(pdbId,chain):
 def get_chain_list(pdbId):
     address = "https://files.rcsb.org/view/{PDBID}.cif".format(PDBID=pdbId)
     response = _urlopen(address)
-    html = response.read()
+    html = response.read().decode('utf-8')
     html = html.split("_pdbx_poly_seq_scheme")[-1].split("#")[0].split("\n")[1:]
     chains = [line.split()[-3] for line in html if line]
     out = []
