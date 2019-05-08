@@ -45,6 +45,9 @@ matrix:
   - os: linux
     dist: bionic
     python: 3.7
+  - os: linux
+    dist: bionic
+    python: "3.8-dev"
   - os: osx
     language: generic
     env: TOXENV=py27
@@ -77,9 +80,10 @@ deploy:
   provider: pypi
   user: $PYPI_USER
   password: $PYPI_PASS
-  server: https://pypi.org/legacy/
+  server: https://upload.pypi.org/legacy/
   distributions: "sdist bdist_wheel"
   on:
+    os: linux
+    dist: xenial
     branch: master
     python: 3.7
-    dist: xenial
