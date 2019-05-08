@@ -17,6 +17,6 @@ class TestPDBreading(TestCase):
         self.assertTrue(dwn.check_if_in_PDB(self.pdbid,"A"))
         self.assertFalse(dwn.check_if_in_PDB(self.pdbid,"C"))
         self.assertEqual(dwn.get_ligands(self.pdbid,"A"),["SAM"])
-        self.assertEqual(len(dwn.get_particular_chain(self.pdbid,"A")),243)
-        self.assertEqual(dwn.get_particular_chain(self.pdbid,"A"),dwn.get_all_chains(self.pdbid))
+        self.assertEqual(len(list(dwn.get_particular_chain(self.pdbid,"A"))),243)
+        self.assertEqual(list(dwn.get_particular_chain(self.pdbid,"A")),dwn.get_all_chains(self.pdbid))
         self.assertEqual(dwn.get_chain_list(self.pdbid),["A"])
