@@ -44,7 +44,7 @@ def get_ligands(pdbId,chain):
     address = "http://www.rcsb.org/pdb/rest/ligandInfo?structureId={PDBID}.{CHAIN}".format(CHAIN=chain, PDBID=pdbId)
     response = _urlopen(address)
     html = response.read().decode('utf-8')
-    ligands = re.findall('chemicalID="([A-Z0-9]*)" type="non-polymer"',html.decode('utf-8'))
+    ligands = re.findall('chemicalID="([A-Z0-9]*)" type="non-polymer"',html)
     return ligands
 
 
