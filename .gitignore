@@ -5,3 +5,4 @@ venv
 build
 knot_pull.egg-info
 .idea
+.eggs
