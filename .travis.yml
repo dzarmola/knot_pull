@@ -9,6 +9,7 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew list python &>/dev/null || brew install python; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew list python3 &>/dev/null || brew install python3; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install pyenv-virtualenv; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install pyenv-virtualenv; fi
 
 matrix:
   include:
@@ -72,7 +73,7 @@ install:
   - pipenv install --dev --skip-lock
 
 script:
-  nosetests
+  pipenv run nosetests
 
 after_success:
   pipenv run codecov
