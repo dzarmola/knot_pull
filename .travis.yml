@@ -69,11 +69,11 @@ matrix:
 
 install:
   - pip install pipenv
-  - pipenv install nose codecov
+  - pipenv install nose codecov numpy
   - pipenv install --dev --skip-lock
 
 script:
-  pipenv run nosetests
+  pipenv run nosetests --with-coverage --cover-package=knot_pull
 
 after_success:
   pipenv run codecov

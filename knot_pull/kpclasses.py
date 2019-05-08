@@ -185,6 +185,10 @@ class Crossing(object):
     def has_values(self,tup):
         return self.l1.val!=self.l2.val and self.l1.val in tup and self.l2.val in tup
 
+    def __eq__(self, cr):
+        return self.even().val == cr.even().val and self.uneven().val == cr.uneven().val and \
+            self.even().top == cr.even().top and self.even().top == cr.even().top
+
 class DowkerError(ValueError):
     """ Raised when Dowker code cannot be corrected """
     pass
@@ -208,7 +212,7 @@ class Code(object):
         return self.crossings[key]
 
     def check_yo(self):
-        if any(cr.l1.val%2==cr.l2.val for cr in self.crossings):
+        if any(cr.l1.val%2==cr.l2.val%2 or cr.l1.top==cr.l2.top for cr in self.crossings):
             raise ValueError("Dowker broke: {}".format(self))
 
     def set_mod_dowker_code(self,lista):
@@ -234,24 +238,16 @@ class Code(object):
             if c.l1.val >= i: c.l1.val += 1
             if c.l2.val >= i: c.l2.val += 1
 
-    def smart_add(self,cr):
-        for c in self.crossings:
-            if c.l1.val >= cr.min().val: c.l1.val += 1
-            if c.l1.val >= cr.max().val: c.l1.val += 1
-            if c.l2.val >= cr.min().val: c.l2.val += 1
-            if c.l2.val >= cr.max().val: c.l2.val += 1
-        self.crossings.append(cr)
-
     def pop(self,cr):
-        id = cr if type(cr) == type(1) else self.crossings.index(cr)
-        self.crossings.pop(id)
+        try:
+            id = cr if type(cr) == type(1) else self.crossings.index(cr)
+            self.crossings.pop(id)
+        except ValueError as e:
+            if self.crossings:
+                raise e
+            else:
+                pass
 
-    def remove_old(self,cr):
-        id = cr if type(cr) == type(1) else self.crossings.index(cr)
-        vals = self.crossings[id].values()
-        self.crossings.pop(id)
-        for cr in self.crossings:
-            cr.remove_previous(*vals)
 
     def find_error(self, omc_inserted):
         smax = len(self.crossings)*2

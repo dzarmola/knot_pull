@@ -278,8 +278,11 @@ def unfurl(code):
                         elif fz.val - sz.val == 1:  # kierunki przeciwne
                             _1 = Crossing(fr.val - 1, fr.top, sz.val, fz.top)  # zipy zamiana!
                             _2 = Crossing(sr.val - 1, sr.top, fz.val, sz.top)
+                    print("l",code,loop)
                     code.remove(loop)
+                    print(code,l1,l2)
                     code.pop(l1)
+                    print(code,l2)
                     code.pop(l2)
                     code.add(_1)
                     code.add(_2)
