@@ -33,6 +33,7 @@ matrix:
   - os: linux
     dist: xenial
     python: 3.7
+    env: DEPLOY=1
   - os: linux
     dist: bionic
     python: 2.7
@@ -87,3 +88,4 @@ deploy:
     dist: xenial
     branch: master
     python: 3.7
+    condition: $DEPLOY = 1

@@ -14,7 +14,7 @@ setuptools.setup(
     author_email="dzarmola@gmail.com",
     description="Simplifier of 3D structures of molecules",
     long_description=long_description,
-    long_description_content_type="text/markdown",
+    long_description_content_type="text/x-rst",
     url="https://github.com/dzarmola/knot_pull",
     packages=setuptools.find_packages(),
     python_requires='>=2.7.*',
