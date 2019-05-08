@@ -1,32 +1,16 @@
 
 from __future__ import print_function
 from .vector_ops import point_distance
-
-
-class VectorN(object):
-    def __init__(self,*args):
-        if len(args)==1:
-            v = args[0]
-            self.x = v.x
-            self.y = v.y
-            self.z = v.z
-        else:
-            self.x = args[0]
-            self.y = args[1]
-            self.z = args[2]
-    def __repr__(self):
-        return "\t".join(self.x,self.y,self.z)
-
-    def __str__(self):
-        return "\t".join(self.x,self.y,self.z)
-
+from numpy import ndarray, array as Vector
 
 
 class Bead(object):
-    def __init__(self, vec, type, original_id=None):
+    def __init__(self, vec, type="CA", original_id=None):
         self.x = vec[0]
         self.y = vec[1]
         self.z = vec[2]
+        if not isinstance(vec,ndarray):
+            vec = Vector(vec)
         self.vec = vec
         self.prev_vec = None
         self.type = type
@@ -44,6 +28,7 @@ class Bead(object):
 
     def __repr__(self):
         return "%r,%r,%r" % (self.vec[0],self.vec[1],self.vec[2])
+
     def __str__(self):
         return "%r,%r,%r" % (self.vec[0],self.vec[1],self.vec[2])
 
@@ -66,6 +51,7 @@ class Bead(object):
     def setChand(self,C):
         self.Chand = C
         self.Cdist = point_distance(self.vec,C.vec) if C else None
+
 
 def chainDeepCopy(atom_list):
     """Deep copy of a Bead list"""

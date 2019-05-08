@@ -5,16 +5,18 @@ import setuptools
 with open("README.rst", "r") as fh:
     long_description = fh.read()
 
+VERSION = "0.1.8"
+
 setuptools.setup(
     name="knot_pull",
-    version="0.1.8",
+    version=VERSION,
     author="Aleksandra Jarmolinska",
     author_email="dzarmola@gmail.com",
     description="Simplifier of 3D structures of molecules",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/dzarmola/knot_pull",
-    packages=setuptools.find_packages(), #include=["future"]
+    packages=setuptools.find_packages(),
     python_requires='>=2.7.*',
     classifiers=[
         'Development Status :: 4 - Beta',

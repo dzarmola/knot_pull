@@ -1,0 +1,44 @@
+language: python
+
+cache: pip
+
+sudo: false
+
+python:
+  - 2.6
+  - 2.7
+  - 3.5
+  - 3.6
+  - 3.7
+
+matrix:
+  include:
+  - os: linux
+    dist: trusty
+  - os: linux
+    dist: xenial
+  - os: linux
+    dist: bionic
+  - os: osx
+  - os: windows
+
+
+install:
+  - pip install pipenv
+  - pipenv install --dev --skip-lock
+
+script:
+  nosetests
+
+after_success:
+  pipenv run codecov
+
+deploy:
+  provider: pypi
+  user: $PYPI_USER
+  password: $PYPI_PASS
+  server: https://pypi.org/legacy/
+  distributions: "sdist bdist_wheel"
+  on:
+    branch: master
+    python: 3.7

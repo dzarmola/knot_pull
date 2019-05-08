@@ -1,8 +1,8 @@
 from unittest import TestCase
 
-import knotPull
+import knot_pull
 
 class TestDowker(TestCase):
-    def dowker_is_string(self):
+    def test_dowker_is_string(self):
         s = "nothing for now"
         self.assertTrue(isinstance(s, basestring))

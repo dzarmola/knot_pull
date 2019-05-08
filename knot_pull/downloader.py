@@ -45,7 +45,7 @@ def get_ligands(pdbId,chain):
     return ligands
 
 def getCifIndices(cif_read):
-    mylines = [line.strip() for line in cif_read.split("\n") if re.search("^_atom_site\.",line)]
+    mylines = [line.strip() for line in cif_read.split("\n") if re.search("^_atom_site.",line)]
     fields = ["_atom_site.group_PDB","_atom_site.id","_atom_site.type_symbol","_atom_site.label_atom_id",
               "_atom_site.label_alt_id","_atom_site.label_comp_id","_atom_site.label_entity_id",
               "_atom_site.label_seq_id","_atom_site.pdbx_PDB_ins_code","_atom_site.Cartn_x","_atom_site.Cartn_y",
@@ -64,16 +64,10 @@ def multiline_cif2pdb(coords, indices):
             chain = cs[23]
         else:
             head, snum, elem, aname, alt, rname, ent, seqid, ins, X, Y, Z, occ, Bfac,chain = [cs[i].strip().strip('"') for i in indices]
-        #snum = str(acnt)
         if seqid!=prev:
             rcnt+=1
             prev=seqid
-        #seqid = str(rcnt)
         acnt += 1
-        #new = head.ljust(6) + snum.rjust(5) + " " + aname.rjust(4) + alt.replace(".", " ") + rname.rjust(3) + chain.rjust(
-        #    2) + seqid.rjust(4) \
-        #      + " " * 4 + X.rjust(8) + Y.rjust(8) + Z.rjust(8) + occ.rjust(6) + Bfac.rjust(6) + " " * 10 + elem.rjust(2)
-        #new = map(float,(X,Y,Z))
         if elem == "C" and aname == "CA" and alt in "A.":
             new_coords.append((chain,(X,Y,Z)))
     return new_coords
@@ -96,7 +90,6 @@ def get_particular_chain(pdbId,chain):
     html_coords = html.split("_atom_site.pdbx_PDB_model_num")[1].split("#")[0]
 
     atom_coords = [line for line in html_coords.split("\n") if len(line.split())>2 and line.split()[-1] == "1"  and line.split()[cif_indices[7]].strip()!="."] #wywalam and line.split()[0]=="ATOM" and (chain=="." or line.split()[cif_indices[-1]]==chain)
-    #####removal of ligands
     ligands = get_ligands(pdbId,(chain if chain and chain!="." else ""))
     atom_coords = [x for x in atom_coords if x.split()[cif_indices[5]] not in ligands]
     atom_coords = multiline_cif2pdb(atom_coords,cif_indices)
