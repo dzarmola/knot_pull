@@ -64,7 +64,7 @@ matrix:
 
 install:
   - pip install pipenv
-  - pipenv install nose
+  - pipenv install nose codecov
   - pipenv install --dev --skip-lock
 
 script:
