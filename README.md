@@ -1,3 +1,34 @@
+<table>
+    <tr>
+        <td>License</td>
+        <td><img src='https://img.shields.io/pypi/l/knot_pull.svg'></td>
+        <td>Version</td>
+        <td><img src='https://img.shields.io/pypi/v/knot_pull.svg'></td>
+    </tr>
+    <tr>
+        <td>Travis CI</td>
+        <td><img src='https://travis-ci.org/dzarmola/knot_pull.svg?branch=master'></td>
+        <td>Coverage</td>
+        <td><img src='https://codecov.io/gh/dzarmola/knot_pull/branch/master/graph/badge.svg'></td>
+    </tr>
+    <tr>
+        <td>Wheel</td>
+        <td><img src='https://img.shields.io/pypi/wheel/knot_pull.svg'></td>
+        <td>Implementation</td>
+        <td><img src='https://img.shields.io/pypi/implementation/knot_pull.svg'></td>
+    </tr>
+    <tr>
+        <td>Status</td>
+        <td><img src='https://img.shields.io/pypi/status/knot_pull.svg'></td>
+        <td>Downloads</td>
+        <td><img src='https://img.shields.io/pypi/dm/knot_pull.svg'></td>
+    </tr>
+    <tr>
+        <td>Supported versions</td>
+        <td><img src='https://img.shields.io/pypi/pyversions/knot_pull.svg'></td>
+    </tr>
+</table>
+
 # KnotPull - a simplifier for 3D structures
 
 KnotPull reduces a user provided 3D structure, to simplify it,
