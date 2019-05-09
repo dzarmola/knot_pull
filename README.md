@@ -87,13 +87,29 @@ optional arguments:
   -k, --detect_knot     Calculate the knot Dowker notation and assign the knot
                         type
   -c CHAIN, --chain CHAIN
-                        Specify which chain you want to simplify.
+                        Specify which chain(s) you want to simplify. Multiple
+                        chains should be separated by commas.
+  -b BEGIN, --begin BEGIN
+                        Smooth and analyze only part of the structure: specify
+                        the first bead to be considered. '-b 4' will start
+                        from the 4th bead, '-b i4' will start from the
+                        residue/coordinate with id 4. When specified, only the
+                        first chain from selected/present will be used.
+  -e END, --end END     Smooth and analyze only part of the structure: specify
+                        the first bead to be considered. '-e 104' will
+                        disregard beads from 105th forward, '-e i104' will
+                        disregard residue/coordinates with id >=105. When
+                        specified, only the first chain from selected/present
+                        will be used.
   -o [OUTPUT], --output [OUTPUT]
                         Specify the output file. Format is guessed based on
-                        extension [default pdb]. Default is stdout
-  -s [SAVE], --save [SAVE]
-                        Write out a savefile. If any argument is given here -
-                        run from a savefile (knot detection only).
+                        extension [default pdb]. For stdout use "-". Empty
+                        argument makes an '_out.pdb' file. If this option is
+                        missing just the last frame will be shown (sets
+                        trajectory to 0)
+  -q, --quiet           Nothing except the knot type (if calculated) will be
+                        written to the screen
+
 
 ```
 
