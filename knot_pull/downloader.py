@@ -53,7 +53,8 @@ def getCifIndices(cif_read):
     fields = ["_atom_site.group_PDB","_atom_site.id","_atom_site.type_symbol","_atom_site.label_atom_id",
               "_atom_site.label_alt_id","_atom_site.label_comp_id","_atom_site.label_entity_id",
               "_atom_site.label_seq_id","_atom_site.pdbx_PDB_ins_code","_atom_site.Cartn_x","_atom_site.Cartn_y",
-              "_atom_site.Cartn_z","_atom_site.occupancy","_atom_site.B_iso_or_equiv","_atom_site.auth_asym_id"]
+              "_atom_site.Cartn_z","_atom_site.occupancy","_atom_site.B_iso_or_equiv","_atom_site.auth_asym_id",
+              "_atom_site.auth_seq_id"]
     return [mylines.index(i) for i in fields]
 
 
@@ -64,17 +65,13 @@ def multiline_cif2pdb(coords, indices):
     new_coords = []
     for line in coords:
         cs = line.split()
-        if not indices:
-            head,snum,elem,aname,alt,rname,_,ent,seqid,ins,X,Y,Z,occ,Bfac = cs[:15]
-            chain = cs[23]
-        else:
-            head, snum, elem, aname, alt, rname, ent, seqid, ins, X, Y, Z, occ, Bfac,chain = [cs[i].strip().strip('"') for i in indices]
+        head, snum, elem, aname, alt, rname, ent, seqid, ins, X, Y, Z, occ, Bfac,chain,resid = [cs[i].strip().strip('"') for i in indices]
         if seqid!=prev:
             rcnt+=1
             prev=seqid
         acnt += 1
         if elem == "C" and aname == "CA" and alt in "A.":
-            new_coords.append((chain,(X,Y,Z)))
+            new_coords.append((chain,int(resid),(X,Y,Z)))
     return new_coords
 
 
@@ -103,9 +100,13 @@ def get_particular_chain(pdbId,chain):
     ligands = get_ligands(pdbId,(chain if chain and chain!="." else ""))
     atom_coords = [x for x in atom_coords if x.split()[cif_indices[5]] not in ligands]
     atom_coords = multiline_cif2pdb(atom_coords,cif_indices)
-    if chain!=".":
-        return filter(lambda x:x[0] in chain, atom_coords)
-    return atom_coords
+    if chain == ".":
+        return atom_coords,''
+    _chains = set(_[0] for _ in atom_coords)
+    if not any(c in _chains for c in chain):
+        return [],"No such chain(s): {} in the structure (only {} present)".format(chain, _chains)
+    else:
+        return filter(lambda x:x[0] in chain, atom_coords),''
 
 
 def get_chain_list(pdbId):

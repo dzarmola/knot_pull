@@ -8,7 +8,7 @@ import argparse
 import sys,os,ntpath
 
 
-from knot_pull.reader import read_from_pdb, read_from_xyz, read_from_web,guess_format,download_from_pdb
+from knot_pull.reader import read_from_pdb, read_from_xyz, read_from_web,guess_format
 from knot_pull.puller import pull
 from knot_pull.writer import write_xyz
 from knot_pull.unentangler import unentangle
@@ -21,7 +21,8 @@ def main():
     """Main body of the command line program"""
     parser = argparse.ArgumentParser(description="Simplify the 3D structure of a molecule while preserving the topology")
 
-    parser.add_argument("infile", help="Structure file which will be used (to download the structure from RCSB PDB give only the PDB ID",nargs='?')
+    parser.add_argument("infile", help="Structure file which will be used (to download the structure from RCSB PDB "
+                                       "give only the PDB ID",nargs='?')
     parser.add_argument("-p", "--preserve_resnums", action="store_true", default=0,
                         help="Keep original numbering")
     parser.add_argument("-t", "--trajectory", action="store_true", default=1,
@@ -31,15 +32,15 @@ def main():
     parser.add_argument("-k", "--detect_knot", default=0,  action="store_true",
                         help="Calculate the knot Dowker notation and assign the knot type")
     parser.add_argument("-c", "--chain", default='',
-                        help="Specify which chain you want to simplify.")
-    parser.add_argument("-b", "--begin", default='',
+                        help="Specify which chain(s) you want to simplify. Multiple chains should be separated by commas.")
+    parser.add_argument("-b", "--begin", default=None,
                         help="""Smooth and analyze only part of the structure: specify the first bead to be considered.
                          '-b 4' will start from the 4th bead, '-b i4' will start from the residue/coordinate with id 4.
                          When specified, only the first chain from selected/present will be used.""")
-    parser.add_argument("-e", "--end", default='',
+    parser.add_argument("-e", "--end", default=None,
                         help="""Smooth and analyze only part of the structure: specify the first bead to be considered.
-                         '-e 104' will disregard beads from 105th forward, '-e i104' will disregard residue/coordinates with id >=105.
-                         When specified, only the first chain from selected/present will be used.""")
+                         '-e 104' will disregard beads from 105th forward, '-e i104' will disregard residue/coordinates 
+                         with id >=105. When specified, only the first chain from selected/present will be used.""")
     parser.add_argument("-o", "--output", default='',nargs='?',
                         help="""Specify the output file. Format is guessed based on extension [default pdb]. 
                         For stdout use "-". Empty argument makes an '_out.pdb' file. 
@@ -47,7 +48,8 @@ def main():
     parser.add_argument("-q", "--quiet", action="store_true", default=0,
                         help="Nothing except the knot type (if calculated) will be written to the screen")
     parser.add_argument("-S", "--save", default='',nargs='?',
-                        help="""Write out a savefile. If any argument is given here - run from a savefile (knot detection only).""")
+                        help="""Write out a savefile. If any argument is given here - run from a savefile 
+                        (knot detection only).""")
 
     args = parser.parse_args()
 
@@ -81,12 +83,22 @@ def main():
         args.format = 'online'
         infile = pdbid
 
-    selected_chains = args.chain
-    b = args.begin
-    e = args.end
-    if selected_chains:
-        if b or e:
-            print("""More than one chain was selected: """)
+    selected_chains = args.chain.split(",") if args.chain else []
+    b_res = args.begin
+    e_res = args.end
+    if b_res is not None or e_res is not None:
+        if len(selected_chains) != 1:
+            print("""#WARNING: Begin/end residue was specified. Only one chain will be analyzed """)
+        try:
+            if b_res: real_b = int(b_res.replace("i",''))
+        except:
+            sys.exit("Begin residue cannot be interpreted as an int: {}".format(b_res))
+        try:
+            if e_res: real_e = int(e_res.replace("i",''))
+        except:
+            sys.exit("End residue cannot be interpreted as an int: {}".format(e_res))
+
+
 
     if args.format == "guess":
         if ".xyz" in infile.lower():
@@ -101,19 +113,25 @@ def main():
     if not CONFIG['QUIET']: print ("#LOG: data format: {}".format(fformat))
 
     if fformat == 'online':
-        atoms,cnames = read_from_web(infile,selected_chain=selected_chains)
+        atoms,cnames,err_mes = read_from_web(infile,selected_chains=selected_chains,begin=b_res,end=e_res)
         infile = "{}.pdb".format(infile)
-    elif fformat == 'pdb':
-        atoms,cnames = read_from_pdb(filename=infile,selected_chain=selected_chains)
         if not atoms:
-            print ("""No such chain: {}\n##############################################""".format(selected_chains))
+            print(err_mes)
+            parser.print_help(sys.stderr)
+            sys.exit(1)
+    elif fformat == 'pdb':
+        atoms,cnames,err_mes = read_from_pdb(filename=infile,selected_chains=selected_chains,begin=b_res,end=e_res)
+        if not atoms:
+            print(err_mes)
+#            print ("""No such chain: {}\n##############################################""".format(selected_chains))
             parser.print_help(sys.stderr)
             sys.exit(1)
     else:
         if args.chain: print ("#WARNING: File format is .xyz yet chain was specified - it will not work, all chains will be used")
-        atoms,cnames = read_from_xyz(filename=infile)
+        atoms,cnames,err_mes = read_from_xyz(filename=infile,begin=b_res,end=e_res)
         if not atoms:
-            print ("""Empty file/wrong format!\n##############################################""")
+            print(err_mes)
+#            print ("""Empty file/wrong format!\n##############################################""")
             parser.print_help(sys.stderr)
             sys.exit(1)
 

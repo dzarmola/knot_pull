@@ -278,11 +278,8 @@ def unfurl(code):
                         elif fz.val - sz.val == 1:  # kierunki przeciwne
                             _1 = Crossing(fr.val - 1, fr.top, sz.val, fz.top)  # zipy zamiana!
                             _2 = Crossing(sr.val - 1, sr.top, fz.val, sz.top)
-                    print("l",code,loop)
                     code.remove(loop)
-                    print(code,l1,l2)
                     code.pop(l1)
-                    print(code,l2)
                     code.pop(l2)
                     code.add(_1)
                     code.add(_2)
@@ -676,7 +673,7 @@ def dowker_code(atoms, from_atoms=True):
     translated = translate_dt_list(sub_codes)
     if VERBOSE: print (translated)
 
-    return translated,sub_codes
+    return translated,dc.mod_dowker_code()#sub_codes
 
 if __name__ == "__main__":
     #import sys
