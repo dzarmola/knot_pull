@@ -32,14 +32,23 @@ def main():
                         help="Calculate the knot Dowker notation and assign the knot type")
     parser.add_argument("-c", "--chain", default='',
                         help="Specify which chain you want to simplify.")
+    parser.add_argument("-b", "--begin", default='',
+                        help="""Smooth and analyze only part of the structure: specify the first bead to be considered.
+                         '-b 4' will start from the 4th bead, '-b i4' will start from the residue/coordinate with id 4.
+                         When specified, only the first chain from selected/present will be used.""")
+    parser.add_argument("-e", "--end", default='',
+                        help="""Smooth and analyze only part of the structure: specify the first bead to be considered.
+                         '-e 104' will disregard beads from 105th forward, '-e i104' will disregard residue/coordinates with id >=105.
+                         When specified, only the first chain from selected/present will be used.""")
     parser.add_argument("-o", "--output", default='',nargs='?',
                         help="""Specify the output file. Format is guessed based on extension [default pdb]. 
                         For stdout use "-". Empty argument makes an '_out.pdb' file. 
                         If this option is missing just the last frame will be shown (sets trajectory to 0)""")
     parser.add_argument("-q", "--quiet", action="store_true", default=0,
                         help="Nothing except the knot type (if calculated) will be written to the screen")
-    parser.add_argument("-s", "--save", default='',nargs='?',
+    parser.add_argument("-S", "--save", default='',nargs='?',
                         help="""Write out a savefile. If any argument is given here - run from a savefile (knot detection only).""")
+
     args = parser.parse_args()
 
     CONFIG['CHECK_KNOT'] = args.detect_knot
@@ -72,6 +81,12 @@ def main():
         args.format = 'online'
         infile = pdbid
 
+    selected_chains = args.chain
+    b = args.begin
+    e = args.end
+    if selected_chains:
+        if b or e:
+            print("""More than one chain was selected: """)
 
     if args.format == "guess":
         if ".xyz" in infile.lower():
@@ -86,12 +101,12 @@ def main():
     if not CONFIG['QUIET']: print ("#LOG: data format: {}".format(fformat))
 
     if fformat == 'online':
-        atoms,cnames = read_from_web(infile,selected_chain=args.chain)
+        atoms,cnames = read_from_web(infile,selected_chain=selected_chains)
         infile = "{}.pdb".format(infile)
     elif fformat == 'pdb':
-        atoms,cnames = read_from_pdb(filename=infile,selected_chain=args.chain)
+        atoms,cnames = read_from_pdb(filename=infile,selected_chain=selected_chains)
         if not atoms:
-            print ("""No such chain: {}\n##############################################""".format(args.chain))
+            print ("""No such chain: {}\n##############################################""".format(selected_chains))
             parser.print_help(sys.stderr)
             sys.exit(1)
     else:
