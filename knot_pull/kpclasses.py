@@ -1,4 +1,3 @@
-
 from __future__ import print_function
 from .vector_ops import point_distance
 from numpy import ndarray, array as Vector

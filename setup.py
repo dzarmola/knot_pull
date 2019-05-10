@@ -5,7 +5,7 @@ import setuptools
 with open("README.rst", "r") as fh:
     long_description = fh.read()
 
-VERSION = "0.2.3"
+VERSION = "0.2.4"
 
 setuptools.setup(
     name="knot_pull",

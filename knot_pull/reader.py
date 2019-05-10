@@ -1,6 +1,6 @@
-import urllib
+from __future__ import print_function
 from .vector_ops import *
-from .config import NUMBER_PRECISION_FUNCTION
+from .config import NUMBER_PRECISION_FUNCTION,VERBOSE
 from .kpclasses import Bead
 from .downloader import get_from_afar
 from numpy import array as Vector
@@ -94,20 +94,22 @@ def read_from_web(pdbid,selected_chains='',begin=None,end=None):
     return atoms,cnames,err
 
 
-def read_from_pdb(filename,selected_chains='',begin=None,end=None):
+def read_from_pdb(filename,selected_chains='',begin=None,end=None,rna=False):
     a = []
     last = None
     last_chain = None
     Calpha = []
     cnames = []
-    if selected_chains:#len(selected_chain)>1:
-        #selected_chains = list(selected_chain)
-        for c in selected_chains:
-            Calpha.append(re.compile("ATOM  .{7}CA.{6}"+c+"([0-9 ]{4}).{4}([0-9\. -]{8})([0-9\. -]{8})([0-9\. -]{8}).{23}C"))
-    #elif :
-    #    Calpha.append(re.compile("ATOM  .{7}CA.{6}"+selected_chain[0]+"([0-9 ]{4}).{4}([0-9\. -]{8})([0-9\. -]{8})([0-9\. -]{8}).{23}C"))
+    if rna:
+        atom_to_be = 'P '
     else:
-        Calpha.append(re.compile("ATOM  .{7}CA.{7}([0-9 ]{4}).{4}([0-9\. -]{8})([0-9\. -]{8})([0-9\. -]{8}).{23}C"))
+        atom_to_be = 'CA'
+
+    if selected_chains:#len(selected_chain)>1:
+        for c in selected_chains:
+            Calpha.append(re.compile("ATOM  .{7}"+atom_to_be+".{6}"+c+"([0-9 ]{4}).{4}([0-9\. -]{8})([0-9\. -]{8})([0-9\. -]{8})"))#).{23}C"))
+    else:
+        Calpha.append(re.compile("ATOM  .{7}"+atom_to_be+".{7}([0-9 ]{4}).{4}([0-9\. -]{8})([0-9\. -]{8})([0-9\. -]{8})"))#.{23}C"))
 
     bid = bnum = eid = enum = None
     if begin is not None:
@@ -126,6 +128,9 @@ def read_from_pdb(filename,selected_chains='',begin=None,end=None):
     last_rid = None
 
     found_chain = False
+
+    _avg_dist = 0
+    _avg_cnt = 0
 
     with open(filename) as input:
         for line in input:
@@ -166,6 +171,9 @@ def read_from_pdb(filename,selected_chains='',begin=None,end=None):
                         new_vec = Vector(list(map(NUMBER_PRECISION_FUNCTION,g[1:])))
                         last = int(g[0])
                         new_atom = Bead(new_vec,"CA")
+                        if a and (a[-1].end != True):
+                            _avg_dist += point_distance(a[-1].vec, new_vec)
+                            _avg_cnt += 1
                         if a and (a[-1].end != True) and point_distance(a[-1].vec, new_vec) > 4.:
                             pd = point_distance(a[-1].vec, new_vec)
                             # cd = pd/4
@@ -182,6 +190,8 @@ def read_from_pdb(filename,selected_chains='',begin=None,end=None):
                         a.append(new_atom)
                     last_chain = line[21]
 
+    if VERBOSE:
+        print ("Average distance in file is: {}".format(_avg_dist / _avg_cnt))
 
     err = ""
     if not a:

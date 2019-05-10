@@ -47,6 +47,9 @@ def main():
                         If this option is missing just the last frame will be shown (sets trajectory to 0)""")
     parser.add_argument("-q", "--quiet", action="store_true", default=0,
                         help="Nothing except the knot type (if calculated) will be written to the screen")
+    parser.add_argument("-r", "--rna", action="store_true", default=0,
+                        help="""Used only if a file in .pdb format is provided. Will use P atoms for coordinates,
+                        instead of C-alpha""")
     parser.add_argument("-S", "--save", default='',nargs='?',
                         help="""Write out a savefile. If any argument is given here - run from a savefile 
                         (knot detection only).""")
@@ -58,6 +61,8 @@ def main():
     CONFIG['TRAJECTORY'] = args.trajectory
     CONFIG['GREEDY'] = args.detect_knot
     CONFIG['QUIET'] = args.quiet
+
+    rna = False
 
 
     if args.save:
@@ -120,7 +125,8 @@ def main():
             parser.print_help(sys.stderr)
             sys.exit(1)
     elif fformat == 'pdb':
-        atoms,cnames,err_mes = read_from_pdb(filename=infile,selected_chains=selected_chains,begin=b_res,end=e_res)
+        rna = args.rna
+        atoms,cnames,err_mes = read_from_pdb(filename=infile,selected_chains=selected_chains,begin=b_res,end=e_res,rna=rna)
         if not atoms:
             print(err_mes)
 #            print ("""No such chain: {}\n##############################################""".format(selected_chains))
@@ -150,7 +156,7 @@ def main():
         output = open(output, "w")
 
     chains = pull(atoms, output, greedy=CONFIG["GREEDY"], greedy_file=output,trajectory=CONFIG['TRAJECTORY'],
-                  quiet=CONFIG['QUIET'], chain_names=cnames)
+                  quiet=CONFIG['QUIET'], chain_names=cnames,rna=rna)
 
     if not CONFIG['QUIET']: print ("#LOG: finished smoothing: {} chain(s)".format(len(chains)))
 
@@ -163,7 +169,7 @@ def main():
         out.close()
 
     if atoms and CONFIG['CHECK_KNOT']:
-        if not CONFIG['QUIET']: print ("Final topology:",sep="")
+        if not CONFIG['QUIET']: print ("Final topology: {}: ".format([len(c.atoms) for c in chains]),sep="")
         topo, dt_code = unentangle(chains, outfile=0)
         print (topo)
         if not CONFIG['QUIET']: print("#DT codes:", dt_code)

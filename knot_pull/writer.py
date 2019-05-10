@@ -29,11 +29,15 @@ def print_out_last_pdb(handle,frames,atoms):
             x+=1
     out.write("ENDMDL\n")
 
-def print_out_one_frame(out,atoms,len_fr,chain):
+def print_out_one_frame(out,atoms,len_fr,chain,rna=False):
     out.write("MODEL {}\n".format(len_fr))
+    if rna:
+        atom_to_be,elem = 'P ','P'
+    else:
+        atom_to_be,elem = 'CA','C'
     for j,atom in enumerate(atoms):
         a=atom.vec
-        out.write("ATOM  % 5d  CA  ALA %s%4d    %8.3f%8.3f%8.3f                       C\n" % (j+1, chain ,j+1,a[0],a[1],a[2]))
+        out.write("ATOM  % 5d  %s  ALA %s%4d    %8.3f%8.3f%8.3f                       %s\n" % (j+1, atom_to_be,chain ,j+1,a[0],a[1],a[2],elem))
 #            if atoms[j].end:
 #                x+=1
     out.write("ENDMDL\n")

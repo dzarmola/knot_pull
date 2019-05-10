@@ -268,7 +268,7 @@ def run_through_division(atoms):
 
     return atom_lists  # returns all separateable segments
 
-def pull(atoms, outfile, greedy=0, greedy_file="",trajectory=True,quiet=False, chain_names=[]):
+def pull(atoms, outfile, greedy=0, greedy_file="",trajectory=True,quiet=False, chain_names=(),rna=False):
     frames, atoms = run_through_filtering(atoms, outfile, greedy=greedy, greedy_file=greedy_file,
                                                         trajectory=trajectory)
 
@@ -276,7 +276,7 @@ def pull(atoms, outfile, greedy=0, greedy_file="",trajectory=True,quiet=False, c
     model_num = len(frames)+1
     separate_chains = divide_into_bead_chains(atoms)
     for c, chain in enumerate(separate_chains):
-        ch = Chain(c,chain)
+        ch = Chain(c,chain,rna)
         if chain_names: ch.setChainName(chain_names[c])
         if outfile:
             if not quiet: model_num = ch.print2file(model_num,outfile)
@@ -306,7 +306,7 @@ def are_chains_linked(ch1,ch2):
 
 
 class Chain:
-    def __init__(self,chain,atoms):
+    def __init__(self,chain,atoms,rna):
         self.chain = chain
         self.atoms = atoms
         self.atom_lists = run_through_division(atoms)
@@ -318,6 +318,7 @@ class Chain:
         self.dowker = None
         self.dowker_code = None
         self.chain_name = ""
+        self.rna = rna
 
     def setChainName(self,c):
         self.chain_name = "({})".format(c)
@@ -326,7 +327,7 @@ class Chain:
         #print_out_one_frame(outfile, self.atoms, model_num,self.chain)
         model_num+=1
         for alist in self.atom_lists:
-            print_out_one_frame(outfile, alist, model_num,self.chain)
+            print_out_one_frame(outfile, alist, model_num,self.chain,self.rna)
             model_num+=1
         return model_num
 
