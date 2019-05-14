@@ -29,7 +29,7 @@
 
 KnotPull reduces a user provided 3D structure, to simplify it,
 while preserving the topology of the chain. It has been successfully
-used for knot detection in proteins and chromatine chains.
+used for knot detection in proteins and chromatin chains.
 
 It can return either a final, simplified structure, or a .pdb formatted
 trajectory of consecutive simplifications performed.
@@ -54,16 +54,16 @@ To run on a local xyz file (with format id<whitespace>x<whitespace>y<whitespace>
 ```
 knot_pull_check -o from_xyz.pdb -k 05.xyz
 ```
-To run on by structure id from RCSB PDB:
+To run on by structure id from RCSB PDB (without creating an output file):
 ```
 knot_pull_check -k 4mcb
 ```
 
 To show coloured trajectory in PyMOL (if installed):
 ```
-knot_pull_shown my_output_file.pdb
+knot_pull_show my_output_file.pdb
 ```
-If PyMOL is nto available in system path it can be specified as the second argument
+If PyMOL is not available in system path it can be specified as the second argument
 
 ### Help:
 ```
