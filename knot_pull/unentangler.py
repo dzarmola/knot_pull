@@ -30,6 +30,7 @@ def run_through_hashes_dowker(atoms_lists):
     for x, atoms in enumerate(atoms_lists):
         if len(atoms) < 5:
             out.append("01")
+            out.append("[]")
             continue
         dowker,code = dowker_code(atoms)
         out.append(dowker)

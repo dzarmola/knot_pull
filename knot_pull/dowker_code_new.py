@@ -633,7 +633,7 @@ def dowker_code(atoms, from_atoms=True):
     if VERBOSE: print ("Finally",dc)
 
     if not dc.dowker_code():
-        return "01"
+        return "01",[]
 
     dc.start_later_by(6)
 
@@ -665,7 +665,7 @@ def dowker_code(atoms, from_atoms=True):
     if VERBOSE: print ("Finally",dc)
 
     if not dc.dowker_code():
-        return "01"
+        return "01",[]
 
     sub_codes = find_permutations_in(dc.dowker_code())
     if VERBOSE: print (sub_codes)
