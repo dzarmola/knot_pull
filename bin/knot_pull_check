@@ -8,10 +8,11 @@ import argparse
 import sys,os,ntpath
 
 
-from knot_pull.reader import read_from_pdb, read_from_xyz, read_from_web,guess_format
+from knot_pull.reader import read_from_pdb, read_from_xyz, read_from_cif, guess_format
 from knot_pull.puller import pull
-from knot_pull.writer import write_xyz
+from knot_pull.writer import write_xyz,print_out_last_frame
 from knot_pull.unentangler import unentangle
+import knot_pull.config as kpcfg
 
 name = "knot_pull"
 
@@ -23,8 +24,10 @@ def main():
 
     parser.add_argument("infile", help="Structure file which will be used (to download the structure from RCSB PDB "
                                        "give only the PDB ID",nargs='?')
-    parser.add_argument("-p", "--preserve_resnums", action="store_true", default=0,
-                        help="Keep original numbering")
+    parser.add_argument("-p", "--preserve_resnums", action="store_true", default=1,
+                        help="Add pseudoatoms to keep consistent length throughout the smoothing trajectory (default 1)")
+    #parser.add_argument("-p", "--preserve_resnums", action="store_true", default=0,
+    #                    help="Add pseudoatoms to keep consistent length throughout the smoothing trajectory (default 1)")
     parser.add_argument("-t", "--trajectory", action="store_true", default=1,
                         help="Write out all steps of the simplification [default is 1]")
     parser.add_argument("-f", "--format", choices=['pdb','xyz','guess'], default='guess',
@@ -45,14 +48,23 @@ def main():
                         help="""Specify the output file. Format is guessed based on extension [default pdb]. 
                         For stdout use "-". Empty argument makes an '_out.pdb' file. 
                         If this option is missing just the last frame will be shown (sets trajectory to 0)""")
+    parser.add_argument("-r", "--representative_frame", action="store_true", default=0,
+                        help="Find and print to a separate file the first frame with the same number of crossings as the final one")
     parser.add_argument("-q", "--quiet", action="store_true", default=0,
                         help="Nothing except the knot type (if calculated) will be written to the screen")
-    parser.add_argument("-r", "--rna", action="store_true", default=0,
+    parser.add_argument("-a", "--atom_name", default=None,
+                        help="Specify atom name to be used for selecting coordinates (default CA for proteins, P for RNA)")
+    parser.add_argument("-x", "--write_xyz", default=False, action="store_true",
+                        help="Write the output files in .xyz format")
+    parser.add_argument("-R", "--rna", action="store_true", default=0,
                         help="""Used only if a file in .pdb format is provided. Will use P atoms for coordinates,
                         instead of C-alpha""")
-    parser.add_argument("-S", "--save", default='',nargs='?',
-                        help="""Write out a savefile. If any argument is given here - run from a savefile 
-                        (knot detection only).""")
+    parser.add_argument("-S", "--save", default='',nargs='?',help=argparse.SUPPRESS)
+                        #help="""Write out a save file. If any argument is given here - run from a savefile
+                        #(knot detection only)."""
+    parser.add_argument("-V", "--verbose", default=0,action="store_true",help=argparse.SUPPRESS)
+                        #help="""Write out a save file. If any argument is given here - run from a savefile
+                        #(knot detection only)."""
 
     args = parser.parse_args()
 
@@ -62,13 +74,15 @@ def main():
     CONFIG['GREEDY'] = args.detect_knot
     CONFIG['QUIET'] = args.quiet
 
-    rna = False
+    if args.verbose:
+        kpcfg.VERBOSE = True
 
+    rna = False
 
     if args.save:
         atoms = read_from_xyz(filename=args.save)
         if not CONFIG['QUIET']: print ("Save start",len(atoms))
-        chains = pull(atoms, '', greedy=0, greedy_file='', trajectory=0)
+        chains = pull(atoms, '', greedy=0)
         unentangle(chains, outfile=0)
         exit()
 
@@ -104,29 +118,42 @@ def main():
             sys.exit("End residue cannot be interpreted as an int: {}".format(e_res))
 
 
-
     if args.format == "guess":
         if ".xyz" in infile.lower():
             fformat = 'xyz'
         elif ".pdb" in infile.lower():
             fformat = 'pdb'
+        elif ".cif" in infile.lower():
+            fformat = 'cif'
         else:
             fformat = guess_format(infile)
     else:
         fformat = args.format
 
     if not CONFIG['QUIET']: print ("#LOG: data format: {}".format(fformat))
+    outfmt = "xyz" if args.write_xyz else "pdb"
+    RW_CONFIG = {'keep_all': args.preserve_resnums, 'quiet': args.quiet, 'outfmt': outfmt, "atom_name": (args.atom_name if args.atom_name is not None else "P" if args.rna else "CA"),
+                 'begin': b_res,'end': e_res, "trajectory": args.trajectory, "outfile": None, 'chains': selected_chains,
+                 'default_atom_name': (args.atom_name if args.atom_name is not None else "P" if args.rna else "CA"),
+                 'rna': args.rna}
 
     if fformat == 'online':
-        atoms,cnames,err_mes = read_from_web(infile,selected_chains=selected_chains,begin=b_res,end=e_res)
+        atoms,cnames,err_mes = read_from_cif(name=infile, config=RW_CONFIG,online=True)
         infile = "{}.pdb".format(infile)
         if not atoms:
             print(err_mes)
             parser.print_help(sys.stderr)
             sys.exit(1)
+    elif fformat == 'cif':
+        atoms, cnames, err_mes = read_from_cif(name=infile, config=RW_CONFIG,online=False)
+        if not atoms:
+            print(err_mes)
+            #            print ("""No such chain: {}\n##############################################""".format(selected_chains))
+            parser.print_help(sys.stderr)
+            sys.exit(1)
     elif fformat == 'pdb':
         rna = args.rna
-        atoms,cnames,err_mes = read_from_pdb(filename=infile,selected_chains=selected_chains,begin=b_res,end=e_res,rna=rna)
+        atoms,cnames,err_mes = read_from_pdb(filename=infile, config=RW_CONFIG)
         if not atoms:
             print(err_mes)
 #            print ("""No such chain: {}\n##############################################""".format(selected_chains))
@@ -134,7 +161,7 @@ def main():
             sys.exit(1)
     else:
         if args.chain: print ("#WARNING: File format is .xyz yet chain was specified - it will not work, all chains will be used")
-        atoms,cnames,err_mes = read_from_xyz(filename=infile,begin=b_res,end=e_res)
+        atoms,cnames,err_mes = read_from_xyz(filename=infile, config=RW_CONFIG)
         if not atoms:
             print(err_mes)
 #            print ("""Empty file/wrong format!\n##############################################""")
@@ -143,22 +170,39 @@ def main():
 
     if not CONFIG['QUIET']: print ("#LOG: got coordinates: {} bead(s)".format(len(atoms)))
 
+    RW_CONFIG['chains'] = cnames
+
     output = args.output
     if args.output == "":
         output = sys.stdout
         CONFIG['TRAJECTORY'] = False
+        RW_CONFIG['trajectory'] = False
     elif args.output == "-":
         output = sys.stdout
     elif args.output is None:
-        output = infile.replace("xyz","pdb").replace(".pdb","_out.pdb")
+        output = infile.replace("xyz","pdb")
+        if outfmt=="xyz":
+            output = output.replace(".pdb","_out.xyz")
+        else:
+            output = output.replace(".pdb", "_out.pdb")
         output = open(output, "w")
     else:
         output = open(output, "w")
 
-    chains = pull(atoms, output, greedy=CONFIG["GREEDY"], greedy_file=output,trajectory=CONFIG['TRAJECTORY'],
-                  quiet=CONFIG['QUIET'], chain_names=cnames,rna=rna)
+    RW_CONFIG["outfile"] = output
 
-    if not CONFIG['QUIET']: print ("#LOG: finished smoothing: {} chain(s)".format(len(chains)))
+    chains,repr = pull(atoms, RW_CONFIG, cnames, get_representative=args.representative_frame, greedy=CONFIG["GREEDY"])
+    if args.output:
+        output.close()
+
+    if args.representative_frame:
+        repr_infile = output.name.replace("_out.","_out_repr.")
+        with open(repr_infile,"w") as repr_out:
+            RW_CONFIG['outfile'] = repr_out
+            print_out_last_frame(RW_CONFIG, repr, 1, final=True)
+
+    if not CONFIG['QUIET']:
+        print ("#LOG: finished smoothing: {} chain(s)".format(len(chains)))
 
     if args.save is None:
         out = "SAVE_" + infile.replace(".pdb", "_out.pdb").replace(".xyz", "_out.xyz")
@@ -170,12 +214,11 @@ def main():
 
     if atoms and CONFIG['CHECK_KNOT']:
         if not CONFIG['QUIET']: print ("Final topology: {}: ".format([len(c.atoms) for c in chains]),sep="")
-        topo, dt_code = unentangle(chains, outfile=0)
+        topo, dt_code = unentangle(chains)
         print (topo)
         if not CONFIG['QUIET']: print("#DT codes:", dt_code)
 
-    if args.output:
-        output.close()
+
 
 
 

@@ -48,6 +48,25 @@ def get_ligands(pdbId,chain):
     return ligands
 
 
+def get_all_chains(pdbId):
+    return get_particular_chain(pdbId,".")
+
+
+def get_from_afar(pdbId, chain=''):
+    if chain:
+        return get_particular_chain(pdbId,chain)
+    else:
+        return get_all_chains(pdbId)
+
+
+def get_particular_chain(pdbId,chain):
+    address = "https://files.rcsb.org/view/{PDBID}.cif".format(PDBID=pdbId)
+    response = _urlopen(address)
+    html = response.read().decode('utf-8')
+    return html
+
+
+
 def getCifIndices(cif_read):
     mylines = [line.strip() for line in cif_read.split("\n") if re.search("^_atom_site\.",line)]
     fields = ["_atom_site.group_PDB","_atom_site.id","_atom_site.type_symbol","_atom_site.label_atom_id",
@@ -75,38 +94,7 @@ def multiline_cif2pdb(coords, indices):
     return new_coords
 
 
-def get_all_chains(pdbId):
-    return get_particular_chain(pdbId,".")
 
-
-def get_from_afar(pdbId, chain=''):
-    if chain:
-        return get_particular_chain(pdbId,chain)
-    else:
-        return get_all_chains(pdbId)
-
-
-def get_particular_chain(pdbId,chain):
-    address = "https://files.rcsb.org/view/{PDBID}.cif".format(PDBID=pdbId)
-    response = _urlopen(address)
-    html = response.read().decode('utf-8')
-    cif_indices = getCifIndices(html)
-    #html_coords = html.split("_atom_site.pdbx_PDB_model_num")[1].split("#")[0]
-    _coords = re.compile("_atom_site.pdbx_PDB_model_num([^#]+?)#")
-    html_coords = _coords.findall(html)[0]
-    atom_coords = [line for line in html_coords.split("\n") if len(line.split())>2 and line.split()[-1] == "1"
-                   and line.split()[cif_indices[7]].strip() != "."]
-    #wywalam and line.split()[0]=="ATOM" and (chain=="." or line.split()[cif_indices[-1]]==chain)
-    ligands = get_ligands(pdbId,(chain if chain and chain!="." else ""))
-    atom_coords = [x for x in atom_coords if x.split()[cif_indices[5]] not in ligands]
-    atom_coords = multiline_cif2pdb(atom_coords,cif_indices)
-    if chain == ".":
-        return atom_coords,''
-    _chains = set(_[0] for _ in atom_coords)
-    if not any(c in _chains for c in chain):
-        return [],"No such chain(s): {} in the structure (only {} present)".format(chain, _chains)
-    else:
-        return filter(lambda x:x[0] in chain, atom_coords),''
 
 
 def get_chain_list(pdbId):

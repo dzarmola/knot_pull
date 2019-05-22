@@ -1,11 +1,14 @@
 from __future__ import print_function
 from numpy import array as Vector
+from collections import namedtuple
 
 from .vector_ops import *
 from .kpclasses import Bead,chainDeepCopy
 from .writer import *
 from .reader import *
 from .config import EPSILON,VERBOSE
+from knot_pull.finder import find_frame
+
 
 def too_far(p1 ,p2 ,p3 ,i0 ,i1):
     """Checks if crossing is possible - 9 A from all triangle points is impossible due to single connection
@@ -185,13 +188,16 @@ def prefilter_with_adding(atoms):
 
     return atoms, changed
 
-def run_through_filtering(atoms, outfile, greedy=0, greedy_file="",trajectory=True):
+def run_through_filtering(atoms, config, greedy=0):
     """Governs reduction process and when it should end (when there is no improvement)"""
 
     frames = []
     frames.append([(x.original_id, x.vec, x.end) for x in atoms])
-    if outfile and trajectory:
-        print_out_last_pdb(outfile, frames, atoms)
+    o_and_t = config.get('outfile',0) and config.get('trajectory',0)
+
+    if o_and_t:
+        #print_out_last_pdb(config, frames, atoms)
+        print_out_last_frame(config, atoms, len(frames))
 
     atoms, changed = prefilter_with_adding(atoms)
 
@@ -213,8 +219,9 @@ def run_through_filtering(atoms, outfile, greedy=0, greedy_file="",trajectory=Tr
                 if VERBOSE: print ("Breaking filtering due to to not enough change")
                 break
 
-        if outfile and trajectory:
-            print_out_last_pdb(outfile, frames, atoms)
+        if o_and_t:
+            #print_out_last_pdb(config, frames, atoms)
+            print_out_last_frame(config, atoms, len(frames))
 
         atoms, changed = prefilter_with_adding(atoms)
 
@@ -224,13 +231,14 @@ def run_through_filtering(atoms, outfile, greedy=0, greedy_file="",trajectory=Tr
         print ("Finished filtering, have {} atoms".format(len(atoms)))
 
     if greedy: #reduce number of atoms (improves topology detection)
-        atoms, _ = filter_greedy(atoms, greedy_file, len(frames))
+        atoms, _ = filter_greedy(atoms, config, len(frames))
         frames.append([(x.original_id, x.vec, x.end) for x in atoms])
         if VERBOSE:
             print ("Finished greedy filtering, have {} atoms".format(len(atoms)))
 
-    if trajectory and outfile:
-        print_out_last_pdb(outfile, frames, atoms)
+    if o_and_t:
+        #print_out_last_pdb(config, frames, atoms)
+        print_out_last_frame(config, atoms, len(frames))
 
     return frames,atoms
 
@@ -242,9 +250,9 @@ def run_through_division(atoms):
         j = i + 1
         _middle = get_middlepoint(atoms[i].vec, atoms[j].vec)
         _tmp1 = chainDeepCopy(atoms[:j] + [Bead(_middle, "CA")])
-        _, _tmp1a = run_through_filtering(_tmp1, outfile=0, greedy=1)
+        _, _tmp1a = run_through_filtering(_tmp1, {}, greedy=1)
         _tmp2 = chainDeepCopy([Bead(_middle, "CA")] + atoms[j:])  #
-        _, _tmp2a = run_through_filtering(_tmp2, outfile=0, greedy=1)
+        _, _tmp2a = run_through_filtering(_tmp2, {}, greedy=1)
         if _tmp1 == _tmp1a and _tmp2 == _tmp2a:  # no reduction
             # print i,
             cuts.append(i)
@@ -268,18 +276,25 @@ def run_through_division(atoms):
 
     return atom_lists  # returns all separateable segments
 
-def pull(atoms, outfile, greedy=0, greedy_file="",trajectory=True,quiet=False, chain_names=(),rna=False):
-    frames, atoms = run_through_filtering(atoms, outfile, greedy=greedy, greedy_file=greedy_file,
-                                                        trajectory=trajectory)
+def pull(atoms, config, chain_names, get_representative=0,greedy=0):#, greedy_file="",trajectory=True,quiet=False, chain_names=(),rna=False):
+
+    outfile = config['outfile']
+    frames, atoms = run_through_filtering(atoms, config, greedy=greedy)
+    quiet = config['quiet']
+    repr = []
+    if get_representative:
+        Atom = namedtuple("Atom","original_id x y z end")
+        repr = find_frame(frames)
+        repr = [Atom(x[0],x[1][0],x[1][1],x[1][2],x[2]) for x in repr]
 
     chains = []
     model_num = len(frames)+1
     separate_chains = divide_into_bead_chains(atoms)
     for c, chain in enumerate(separate_chains):
-        ch = Chain(c,chain,rna)
+        ch = Chain(c,chain)
         if chain_names: ch.setChainName(chain_names[c])
         if outfile:
-            if not quiet: model_num = ch.print2file(model_num,outfile)
+            if not quiet: model_num = ch.print2file(config,model_num)
         chains.append(ch)
 
     for _,c1 in enumerate(chains):
@@ -288,7 +303,7 @@ def pull(atoms, outfile, greedy=0, greedy_file="",trajectory=True,quiet=False, c
                 c1.neighbours.append(c2)
                 c2.neighbours.append(c1)
 
-    return chains
+    return chains,repr
 
 def same_vecs(l1,l2):
     return all(np.array_equal(x.vec,y.vec) for x,y in zip(l1,l2))
@@ -299,14 +314,14 @@ def are_chains_linked(ch1,ch2):
     _tmp_ch1 = chainDeepCopy(ch1.atoms)
     _tmp_ch2 = chainDeepCopy(ch2.atoms)
 
-    _,_both = run_through_filtering(_tmp_both, outfile=0, greedy=1)
-    _,_ch1 = run_through_filtering(_tmp_ch1, outfile=0, greedy=1)
-    _,_ch2 = run_through_filtering(_tmp_ch2, outfile=0, greedy=1)
+    _,_both = run_through_filtering(_tmp_both, {}, greedy=1)
+    _,_ch1 = run_through_filtering(_tmp_ch1, {}, greedy=1)
+    _,_ch2 = run_through_filtering(_tmp_ch2, {}, greedy=1)
     return not same_vecs(_both,_ch1+_ch2)
 
 
 class Chain:
-    def __init__(self,chain,atoms,rna):
+    def __init__(self,chain,atoms):
         self.chain = chain
         self.atoms = atoms
         self.atom_lists = run_through_division(atoms)
@@ -318,16 +333,17 @@ class Chain:
         self.dowker = None
         self.dowker_code = None
         self.chain_name = ""
-        self.rna = rna
+
 
     def setChainName(self,c):
         self.chain_name = "({})".format(c)
 
-    def print2file(self,model_num,outfile):
+    def print2file(self,config,model_num):
         #print_out_one_frame(outfile, self.atoms, model_num,self.chain)
         model_num+=1
         for alist in self.atom_lists:
-            print_out_one_frame(outfile, alist, model_num,self.chain,self.rna)
+            #print_out_one_frame(outfile, alist, model_num,self.chain,self.rna)
+            print_out_last_frame(config, alist, model_num, cur_chain=self.chain_name[1:-1], final=True)
             model_num+=1
         return model_num
 

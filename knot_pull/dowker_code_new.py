@@ -211,6 +211,10 @@ def translate_dt_list(code):
         else:
             if len(c) == 5:
                 out.append("52")
+            elif len(c) == 3:
+                out.append("31")
+            elif len(c) == 4:
+                out.append("41")
             else:
                 out.append("{}0".format(len(c)))
     return "#".join(out)
@@ -327,8 +331,8 @@ def dowker_dbl_loops(code):
         if found:
             break
         for k2, v2 in enumerate(code[k1+1:]):
-            if v1 in trash or v2 in trash:
-                continue
+            #if v1 in trash or v2 in trash:
+            #    continue
             if same_side_cross(v1, v2) and min(map(abs,[v1[0]-v2[0],v1[0]-v2[1],v1[1]-v2[0],v1[1]-v2[1]]))==1: #are neighbours
                 v1_neigh = code.different_neighbour(v1,v2)
                 v2_neigh = code.different_neighbour(v2, v1)
@@ -377,8 +381,8 @@ def dowker_dbl_loops(code):
         for k1, v1 in enumerate(code):
             if found: break
             for k2, v2 in enumerate(code[k1+1:]):
-                if v1 in trash or v2 in trash:
-                    continue
+                #if v1 in trash or v2 in trash:
+                #    continue
                 if same_side_cross(v1, v2):
                     if not both_neighbours(v1,v2,len(code)):
                         v1_neigh = code.different_neighbour(v1,v2)

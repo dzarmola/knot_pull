@@ -185,8 +185,10 @@ class Crossing(object):
         return self.l1.val!=self.l2.val and self.l1.val in tup and self.l2.val in tup
 
     def __eq__(self, cr):
-        return self.even().val == cr.even().val and self.uneven().val == cr.uneven().val and \
+        return type(self) == type(cr) and self.even().val == cr.even().val and self.uneven().val == cr.uneven().val and \
             self.even().top == cr.even().top and self.even().top == cr.even().top
+    def __hash__(self):
+        return hash(id(x))
 
 class DowkerError(ValueError):
     """ Raised when Dowker code cannot be corrected """
