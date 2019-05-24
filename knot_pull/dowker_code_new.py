@@ -161,6 +161,7 @@ def splitz(seq, smallest):
 
 
 def find_permutations_in(code):
+    # TODO instead of "None not in" => filter(x is not None)
     ###just like blast - find a seed of len 3 and try to expand
     dbcode = code + code
     subcodes = []

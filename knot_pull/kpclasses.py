@@ -188,7 +188,7 @@ class Crossing(object):
         return type(self) == type(cr) and self.even().val == cr.even().val and self.uneven().val == cr.uneven().val and \
             self.even().top == cr.even().top and self.even().top == cr.even().top
     def __hash__(self):
-        return hash(id(x))
+        return hash(id(self))
 
 class DowkerError(ValueError):
     """ Raised when Dowker code cannot be corrected """

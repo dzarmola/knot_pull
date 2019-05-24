@@ -65,6 +65,9 @@ def main():
     parser.add_argument("-V", "--verbose", default=0,action="store_true",help=argparse.SUPPRESS)
                         #help="""Write out a save file. If any argument is given here - run from a savefile
                         #(knot detection only)."""
+    parser.add_argument("-n", "--no_pulling", default=0, action="store_true", help=argparse.SUPPRESS)
+    # help="""Write out a save file. If any argument is given here - run from a savefile
+    # (knot detection only)."""
 
     args = parser.parse_args()
 
@@ -135,7 +138,7 @@ def main():
     RW_CONFIG = {'keep_all': args.preserve_resnums, 'quiet': args.quiet, 'outfmt': outfmt, "atom_name": (args.atom_name if args.atom_name is not None else "P" if args.rna else "CA"),
                  'begin': b_res,'end': e_res, "trajectory": args.trajectory, "outfile": None, 'chains': selected_chains,
                  'default_atom_name': (args.atom_name if args.atom_name is not None else "P" if args.rna else "CA"),
-                 'rna': args.rna}
+                 'rna': args.rna, "no_pulling": args.no_pulling}
 
     if fformat == 'online':
         atoms,cnames,err_mes = read_from_cif(name=infile, config=RW_CONFIG,online=True)

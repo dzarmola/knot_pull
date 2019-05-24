@@ -199,33 +199,34 @@ def run_through_filtering(atoms, config, greedy=0):
         #print_out_last_pdb(config, frames, atoms)
         print_out_last_frame(config, atoms, len(frames))
 
-    atoms, changed = prefilter_with_adding(atoms)
-
-    frames_without_shortening = 0
-    atoms_num = len(set(_.tuple() for _ in atoms))
-
-    while changed:  # TODO should check RMSD up to 2 steps back
-        frames.append([(x.original_id, list(x.vec), x.end) for x in atoms])
-        if len(frames) >= 3 and len(frames[-1]) == len(frames[-3]):
-            if all([all(i == j for i, j in zip(x[1], y[1])) for x, y in zip(frames[-1], frames[-3])]):
-                # if two frames back we had the exact same positions
-                break
-            if len(set(_.tuple() for _ in atoms)) == atoms_num:
-                frames_without_shortening += 1
-            else:
-                atoms_num = len(set(_.tuple() for _ in atoms))
-                frames_without_shortening = 0
-            if frames_without_shortening > 2*len(atoms):
-                if VERBOSE: print ("Breaking filtering due to to not enough change")
-                break
-
-        if o_and_t:
-            #print_out_last_pdb(config, frames, atoms)
-            print_out_last_frame(config, atoms, len(frames))
-
+    if not config or not config['no_pulling']:
         atoms, changed = prefilter_with_adding(atoms)
 
-#    frames.append([(x.original_id, x.vec) for x in atoms])
+        frames_without_shortening = 0
+        atoms_num = len(set(_.tuple() for _ in atoms))
+
+        while changed:  # TODO should check RMSD up to 2 steps back
+            frames.append([(x.original_id, list(x.vec), x.end) for x in atoms])
+            if len(frames) >= 3 and len(frames[-1]) == len(frames[-3]):
+                if all([all(i == j for i, j in zip(x[1], y[1])) for x, y in zip(frames[-1], frames[-3])]):
+                    # if two frames back we had the exact same positions
+                    break
+                if len(set(_.tuple() for _ in atoms)) == atoms_num:
+                    frames_without_shortening += 1
+                else:
+                    atoms_num = len(set(_.tuple() for _ in atoms))
+                    frames_without_shortening = 0
+                if frames_without_shortening > 2*len(atoms):
+                    if VERBOSE: print ("Breaking filtering due to to not enough change")
+                    break
+
+            if o_and_t:
+                #print_out_last_pdb(config, frames, atoms)
+                print_out_last_frame(config, atoms, len(frames))
+
+            atoms, changed = prefilter_with_adding(atoms)
+
+        #    frames.append([(x.original_id, x.vec) for x in atoms])
 
     if VERBOSE:
         print ("Finished filtering, have {} atoms".format(len(atoms)))
@@ -248,17 +249,21 @@ def run_through_division(atoms):
     cuts = []
     for i in range(1, len(atoms) - 2):  # No sense in checking last edges
         j = i + 1
+        if VERBOSE: print("Cutting edge {}".format(j))
         _middle = get_middlepoint(atoms[i].vec, atoms[j].vec)
         _tmp1 = chainDeepCopy(atoms[:j] + [Bead(_middle, "CA")])
         _, _tmp1a = run_through_filtering(_tmp1, {}, greedy=1)
+        if VERBOSE: print("Left from {} to {}".format(len(_tmp1),len(_tmp1a)))
         _tmp2 = chainDeepCopy([Bead(_middle, "CA")] + atoms[j:])  #
         _, _tmp2a = run_through_filtering(_tmp2, {}, greedy=1)
+        if VERBOSE: print("Right from {} to {}".format(len(_tmp2),len(_tmp2a)))
         if _tmp1 == _tmp1a and _tmp2 == _tmp2a:  # no reduction
             # print i,
             cuts.append(i)
 
     cuts = [0] + cuts + [len(atoms) - 1]  # fix to get proper segment indices
     atom_lists = []
+    if VERBOSE: print("Cuts: {}".format(cuts))
 
     for i in range(0, len(cuts) - 1):
         cutl = cuts[i]
@@ -276,9 +281,10 @@ def run_through_division(atoms):
 
     return atom_lists  # returns all separateable segments
 
-def pull(atoms, config, chain_names, get_representative=0,greedy=0):#, greedy_file="",trajectory=True,quiet=False, chain_names=(),rna=False):
 
+def pull(atoms, config, chain_names, get_representative=0,greedy=0):#, greedy_file="",trajectory=True,quiet=False, chain_names=(),rna=False):
     outfile = config['outfile']
+
     frames, atoms = run_through_filtering(atoms, config, greedy=greedy)
     quiet = config['quiet']
     repr = []
