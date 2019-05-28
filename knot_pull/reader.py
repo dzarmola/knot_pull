@@ -3,6 +3,7 @@ from .vector_ops import *
 from .config import NUMBER_PRECISION_FUNCTION,VERBOSE
 from .kpclasses import Bead
 from .downloader import get_from_afar
+from .config import CHAINZ
 from numpy import array as Vector
 import re
 
@@ -116,19 +117,22 @@ def read_from_cif(name, config, online=True):
         new_vec = Vector(pos)
         new_atom = Bead(new_vec,"CA")
 #        nv = get_middlepoint(a[-1].vec,new_vec)
+
         if a and (a[-1].end != True) and point_distance(a[-1].vec,new_vec)>4.:
+            ids = [(3 * a[-1].original_id + rid) / 4., (a[-1].original_id + rid) / 2.,
+                   (a[-1].original_id + 3 * rid) / 4.]
             pd = point_distance(a[-1].vec,new_vec)
             #cd = pd/4
             l = a[-1].vec
             middle = get_middlepoint(l,new_vec)
             if pd>12.:
                 lm = get_middlepoint(l,middle)
-                a.append(Bead(Vector(lm),"CA"))
-                a.append(Bead(Vector(middle),"CA"))
+                a.append(Bead(Vector(lm),"CA",original_id=ids[0]))
+                a.append(Bead(Vector(middle),"CA",original_id=ids[1]))
                 rm = get_middlepoint(new_vec,middle)
-                a.append(Bead(Vector(rm),"CA"))
+                a.append(Bead(Vector(rm),"CA",original_id=ids[2]))
             else:
-                a.append(Bead(Vector(middle),"CA"))
+                a.append(Bead(Vector(middle),"CA",original_id=ids[1]))
         a.append(new_atom)
         curc = ch
     last_rid = rid
@@ -224,18 +228,20 @@ def read_from_pdb(filename,config):#selected_chains='',begin=None,end=None,rna=F
                             _avg_dist += point_distance(a[-1].vec, new_vec)
                             _avg_cnt += 1
                         if a and (a[-1].end != True) and point_distance(a[-1].vec, new_vec) > 4.:
+                            ids = [(3 * a[-1].original_id + rid) / 4., (a[-1].original_id + rid) / 2.,
+                                   (a[-1].original_id + 3 * rid) / 4.]
                             pd = point_distance(a[-1].vec, new_vec)
                             # cd = pd/4
                             l = a[-1].vec
                             middle = get_middlepoint(l, new_vec)
                             if pd > 12.:
                                 lm = get_middlepoint(l, middle)
-                                a.append(Bead(Vector(lm), "CA"))
-                                a.append(Bead(Vector(middle), "CA"))
+                                a.append(Bead(Vector(lm), "CA",original_id=ids[0]))
+                                a.append(Bead(Vector(middle), "CA",original_id=ids[1]))
                                 rm = get_middlepoint(new_vec, middle)
-                                a.append(Bead(Vector(rm), "CA"))
+                                a.append(Bead(Vector(rm), "CA",original_id=ids[2]))
                             else:
-                                a.append(Bead(Vector(middle), "CA"))
+                                a.append(Bead(Vector(middle), "CA",original_id=ids[1]))
                         a.append(new_atom)
                     last_chain = chain
 
@@ -335,18 +341,20 @@ def read_from_xyz(filename, config):#begin=None, end = None):#,start,stop):
                 new_atom = Bead(new_vec,"CA",original_id=rid)
         #        nv = get_middlepoint(a[-1].vec,new_vec)
                 if a and (a[-1].end!=True) and point_distance(a[-1].vec,new_vec)>4.:
+                    ids = [(3 * a[-1].original_id + rid) / 4., (a[-1].original_id + rid) / 2.,
+                           (a[-1].original_id + 3 * rid) / 4.]
                     pd = point_distance(a[-1].vec,new_vec)
                     #cd = pd/4
                     l = a[-1].vec
                     middle = get_middlepoint(l,new_vec)
                     if pd>12.:
                         lm = get_middlepoint(l,middle)
-                        a.append(Bead(Vector(lm),"CA"))
-                        a.append(Bead(Vector(middle),"CA"))
+                        a.append(Bead(Vector(lm),"CA",original_id=ids[0]))
+                        a.append(Bead(Vector(middle),"CA",original_id=ids[1]))
                         rm = get_middlepoint(new_vec,middle)
-                        a.append(Bead(Vector(rm),"CA"))
+                        a.append(Bead(Vector(rm),"CA",original_id=ids[2]))
                     else:
-                        a.append(Bead(Vector(middle),"CA"))
+                        a.append(Bead(Vector(middle),"CA",original_id=ids[1]))
                 a.append(new_atom)
     err = ''
     if not a:
@@ -363,4 +371,4 @@ def read_from_xyz(filename, config):#begin=None, end = None):#,start,stop):
         if i<len(a)-1:
             at.setChand(a[i+1])
     atoms = a
-    return atoms, range(ccount),err
+    return atoms, CHAINZ[:ccount],err

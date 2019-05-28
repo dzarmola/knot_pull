@@ -72,11 +72,16 @@ def print_out_last_frame(config, atoms, model_num, final=False, cur_chain=None):
     prev_id = None
     x = 0
     atom_cnt = 1
+    #print("Printing",len(atoms),[_.original_id for _ in atoms])
     for j, a in enumerate(atoms):
         id = int(a.original_id)
-        chain = config['chains'][x] if cur_chain is None else cur_chain
-        if not chain: chain = " "
+        try:
+            chain = config['chains'][x] if cur_chain is None else cur_chain
+        except IndexError:
+            chain = CHAINZ[x] if cur_chain is None else cur_chain
+        if chain == "": chain = " "
         if prev_id is not None and config['keep_all'] and not final:
+            #print("range",prev_id,prev_id+1,id,a.original_id,chain)
             for _ in range(prev_id + 1, id):
                 if config['outfmt'] == "pdb":
                     handle.write("ATOM  %   5d % 4s %s %s%4d    %8.3f%8.3f%8.3f  1.00  0.00           C\n" % (
@@ -94,10 +99,14 @@ def print_out_last_frame(config, atoms, model_num, final=False, cur_chain=None):
         if a.end:
             x += 1
             if config['outfmt'] == "pdb":
-                handle.write("TER\n")
+                handle.write("TER   % 5d % 4s %s %s%4d\n" %(atom_cnt, config['atom_name'],
+                                            ("  G" if config['rna'] else "GLY"),chain, id if not final else atom_cnt))
             else:
                 handle.write("END\n")
         atom_cnt += 1
-    if config['outfmt'] == "pdb":
-        handle.write("TER\n")
-        handle.write("ENDMDL\n")
+    else:
+        if config['outfmt'] == "pdb":
+            handle.write("TER   % 5d % 4s %s %s%4d\n" % (atom_cnt, config['atom_name'],
+                                                     ("  G" if config['rna'] else "GLY"), chain,
+                                                     id if not final else atom_cnt))
+            handle.write("ENDMDL\n")

@@ -107,6 +107,8 @@ def prefilter_with_adding(atoms):
 
     current = atoms[0]
 
+    #print(list((x.id,x.original_id) for x in atoms))
+
     latom = 0
     changed = False
     while current.Chand and current.Chand.Chand:
@@ -137,7 +139,9 @@ def prefilter_with_adding(atoms):
 
                 nowy = Bead(Vector(new_N), "CA", nowy_id)
                 nowy.recent = 2
-                nowy.setId(nowy_id)
+                nowy.setId((current.id+current.Chand.id)/2.)
+                #print("Added", nowy.id, nowy.original_id, "between", current.id, current.original_id, "and",
+                #      current.Chand.id, current.Chand.original_id)
                 nowy.setNhand(current)
                 nowy.setChand(current.Chand)
                 current.Chand.setNhand(nowy)
@@ -165,7 +169,10 @@ def prefilter_with_adding(atoms):
                 nowy_id = (current.original_id + current.Chand.Chand.original_id) / 2.
 
                 nowy = Bead(Vector(position), "CA", nowy_id)
+                nowy.recent = 2
                 nowy.setId(current.Chand.id) #replaces current atom
+                #print("replaced", nowy.id, nowy.original_id, "between", current.id, current.original_id, "and",
+                 #     current.Chand.Chand.id, current.Chand.Chand.original_id)
                 nowy.setNhand(current)
                 nowy.setChand(current.Chand.Chand)
                 current.Chand.Chand.setNhand(nowy)
@@ -186,6 +193,8 @@ def prefilter_with_adding(atoms):
     for i, at in enumerate(atoms):
         at.setId(i)
 
+    #print(list((x.id,x.original_id) for x in atoms))
+    #exit()
     return atoms, changed
 
 def run_through_filtering(atoms, config, greedy=0):
