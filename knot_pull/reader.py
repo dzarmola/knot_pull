@@ -115,7 +115,7 @@ def read_from_cif(name, config, online=True):
             cnames.append(ch)
         pos = list(map(NUMBER_PRECISION_FUNCTION,pos))
         new_vec = Vector(pos)
-        new_atom = Bead(new_vec,"CA")
+        new_atom = Bead(new_vec,"CA",original_id=rid)
 #        nv = get_middlepoint(a[-1].vec,new_vec)
 
         if a and (a[-1].end != True) and point_distance(a[-1].vec,new_vec)>4.:
