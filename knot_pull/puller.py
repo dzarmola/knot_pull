@@ -26,6 +26,10 @@ def inspectingOtherLines(p1, p2, p3, i0, i1, greedy=0, log=0):
     p123normal = get_normal(p1, p2, p3)
 
     inspected = i0
+    if inspected and not inspected.Nhand:
+        if found_crossing(p1,p2,p3, inspected.vec, l1=None, p123normal=None):
+            potentials.append(inspected.vec)
+
     while inspected and inspected.Nhand:
         if inspected.Nhand.end:#Skip "Virtual" connection - between chain ends
             inspected = inspected.Nhand
@@ -40,6 +44,9 @@ def inspectingOtherLines(p1, p2, p3, i0, i1, greedy=0, log=0):
         inspected = inspected.Nhand
 
     inspected = i1
+    if inspected and not inspected.Chand:
+        if found_crossing(p1,p2,p3, inspected.vec, l1=None, p123normal=None):
+            potentials.append(inspected.vec)
     while inspected and inspected.Chand:
         if inspected.end:
             inspected = inspected.Chand
@@ -51,12 +58,10 @@ def inspectingOtherLines(p1, p2, p3, i0, i1, greedy=0, log=0):
         if i is not False:
             potentials.append(i)
         inspected = inspected.Chand
-
     return potentials
 
 def filter_greedy(atoms, outfile='', len_frames=0):
     """Removes all superfluous atoms(kept for PyMOL purposes, to better detect topology"""
-
     current = atoms[0]
     latom = 0 #num of removed atoms
     changed = False
@@ -152,11 +157,11 @@ def prefilter_with_adding(atoms):
             if point_distance(current.vec, current.Chand.Chand.vec) < 4.:  # TODO may be too far?
                 #if can be remove, and the distance is not so great - remove the atom
                 changed = changed or (not current.Chand.recent)
+                #print("Removing currC", current.Chand)
                 current.setChand(current.Chand.Chand)
                 current.Chand.setNhand(current)
                 latom += 1
-
-                current = current.Chand
+#                current = current.Chand
                 continue
                 ## TODO specjalnie nie zamieniam current - watpliwe, ale a noz widelec jeszcze jeden?
             else:
@@ -195,6 +200,7 @@ def prefilter_with_adding(atoms):
 
     #print(list((x.id,x.original_id) for x in atoms))
     #exit()
+
     return atoms, changed
 
 def run_through_filtering(atoms, config, greedy=0):

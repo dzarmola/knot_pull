@@ -1,4 +1,5 @@
 from __future__ import print_function
+import math
 
 from .vector_ops import *
 from .config import VERBOSE
@@ -585,6 +586,23 @@ def find_axis(atoms):
             break
         for i, e in enumerate(atoms):
             e = [e[r % 3], e[(r + 1) % 3], e[(r + 2) % 3]]
+            atoms[i] = e
+        code = get_dt_code(atoms)
+        r+=1
+
+    #rotate y axis
+
+    sinT = math.sin(15)
+    cosT = math.cos(15)
+    r = 1
+    while any(c[0] % 2 == c[1] % 2 for c in code):
+        if r == 23:
+            break
+        for i, e in enumerate(atoms):
+            x,y,z = e
+            nx  = x*cosT - z *sinT
+            nz = z*cosT + x*sinT
+            e = [nx,y,nz] #[e[r % 3], e[(r + 1) % 3], e[(r + 2) % 3]]
             atoms[i] = e
         code = get_dt_code(atoms)
         r+=1

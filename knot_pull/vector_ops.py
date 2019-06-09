@@ -2,6 +2,7 @@ from __future__ import print_function
 import numpy as np
 from math import sqrt, acos
 tmp = 0
+import warnings
 
 
 def add_v3v3(v0, v1):
@@ -183,6 +184,7 @@ def checkIfHalfGlobe(atoms):
     return True, outsiders
 
 def isect_line_plane_v3_4d(p0, p1, plane, epsilon=1e-6):
+    #https://stackoverflow.com/questions/5666222/3d-line-plane-intersection/45362069#45362069
     plane = np.array(plane)
     u = p1 - p0  # sub_v3v3(p1, p0)
     dot = plane[:3].dot(u)  # dot_v3v3(plane, u)
@@ -258,16 +260,47 @@ def in_triangle(p1, p2, p3, x):
         tmp = s
     except np.linalg.linalg.LinAlgError:
         s = np.linalg.lstsq(a, b)[0]
-        print ("LinAlgError:",tmp, s)
+        #print ("LinAlgError:",tmp, s,x)
     return s[0] >= 0 and s[1] >= 0 and s[0] + s[1] <= 1
 
+def alt_in_triangle(p1,p2,p3,x):
+    #https://math.stackexchange.com/questions/544946/determine-if-projection-of-3d-point-onto-plane-is-within-a-triangle
+    u = p2 - p1
+    v = p3 - p1
+    n = np.cross(u,v)
+    w = x - p1
 
-def found_crossing(p1, p2, p3, l0, l1, p123normal):
-    inter = intersect(p123normal, l0, l1)
-    if inter is not None and in_triangle(p1, p2, p3, inter) and is_on_line(inter, l0, l1):
-        return inter
-    else:
-        return False
+    #print(u,w,n,"##",p1,p2,p3,x)
+    gamma = dot_v3v3(np.cross(u,w),n)/dot_v3v3(n,n)
+    beta = dot_v3v3(np.cross(w,v),n)/dot_v3v3(n,n)
+    alfa = 1 - gamma - beta
+    pp = mul_v3_fl(p1,alfa) + mul_v3_fl(p2,beta) + mul_v3_fl(p3,gamma)
+    #print("alt",pp,x,abs(sum(pp-x)),"within",p1,p2,p3)
+    return abs(sum(pp-x)) < 1e-5 and (0 <= alfa <= 1) and (0 <= beta <= 1) and (0 <= gamma <= 1)
+
+def found_crossing(p1, p2, p3, l0, l1=None, p123normal=None):
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        if l1 is None:
+            if alt_in_triangle(p1, p2, p3, l0):
+                return l0
+            else:
+                return False
+        #print('l0',p1,p2,p3,l0,l1)
+        if alt_in_triangle(p1,p2,p3,l0):
+            #print("fc",l0,p1,p2,p3)
+            return l0
+        #print('l1')
+        if alt_in_triangle(p1,p2,p3,l1):
+            #print("fc", l1, p1, p2, p3)
+            return l1
+        inter = intersect(p123normal, l0, l1)
+        #print("FC",p1,p2,p3,"inter of",l0,l1,"is",inter)
+        if inter is not None and alt_in_triangle(p1, p2, p3, inter) and is_on_line(inter, l0, l1):
+            #print(True)
+            return inter
+        else:
+            return False
 
 
 def get_list_of_points_on_line(p1, p2):
