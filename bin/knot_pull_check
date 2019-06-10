@@ -9,7 +9,7 @@ import sys,os,ntpath
 
 
 from knot_pull.reader import read_from_pdb, read_from_xyz, read_from_cif, guess_format
-from knot_pull.puller import pull
+from knot_pull.bipuller import pull
 from knot_pull.writer import write_xyz,print_out_last_frame
 from knot_pull.unentangler import unentangle
 import knot_pull.config as kpcfg
@@ -183,7 +183,7 @@ def main():
     elif args.output == "-":
         output = sys.stdout
     elif args.output is None:
-        output = infile.replace("xyz","pdb")
+        output = infile.replace(".xyz",".pdb").replace(".cif",".pdb")
         if outfmt=="xyz":
             output = output.replace(".pdb","_out.xyz")
         else:

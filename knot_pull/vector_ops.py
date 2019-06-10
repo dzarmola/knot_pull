@@ -264,6 +264,8 @@ def in_triangle(p1, p2, p3, x):
     return s[0] >= 0 and s[1] >= 0 and s[0] + s[1] <= 1
 
 def alt_in_triangle(p1,p2,p3,x):
+    epsilon = 1e-5
+    #return in_triangle(p1,p2,p3,x)
     #https://math.stackexchange.com/questions/544946/determine-if-projection-of-3d-point-onto-plane-is-within-a-triangle
     u = p2 - p1
     v = p3 - p1
@@ -276,7 +278,7 @@ def alt_in_triangle(p1,p2,p3,x):
     alfa = 1 - gamma - beta
     pp = mul_v3_fl(p1,alfa) + mul_v3_fl(p2,beta) + mul_v3_fl(p3,gamma)
     #print("alt",pp,x,abs(sum(pp-x)),"within",p1,p2,p3)
-    return abs(sum(pp-x)) < 1e-5 and (0 <= alfa <= 1) and (0 <= beta <= 1) and (0 <= gamma <= 1)
+    return abs(sum(pp-x)) < epsilon and (0-epsilon <= alfa <= 1+epsilon) and (0-epsilon <= beta <= 1+epsilon) and (0-epsilon <= gamma <= 1+epsilon)
 
 def found_crossing(p1, p2, p3, l0, l1=None, p123normal=None):
     with warnings.catch_warnings():
