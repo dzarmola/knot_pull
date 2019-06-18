@@ -112,6 +112,8 @@ def get_dt_code(atoms):
                 val = -1
             crosses[tuple(sorted([l, k]))] = crosses.get(tuple(sorted([l, k])), []) + [cnt * val]
             cnt += 1
+    if not crosses:
+        return None
     crossings = list(zip(*sorted(crosses.items(), key=lambda x:x[1])))[1]
     if VERBOSE: print("Reading crosses:",crossings)
     code.read_in(crossings)
@@ -579,6 +581,8 @@ def fix_loop(code, loops):
 def find_axis(atoms):
     atoms = [_.vec for _ in atoms]
     code = get_dt_code(atoms)
+    if code is None:
+        return None
     r=1
     while any(c[0]%2==c[1]%2 for c in code):
         if r==3:
@@ -588,6 +592,8 @@ def find_axis(atoms):
             e = [e[r % 3], e[(r + 1) % 3], e[(r + 2) % 3]]
             atoms[i] = e
         code = get_dt_code(atoms)
+        if code is None:
+            return None
         r+=1
 
     #rotate y axis
@@ -605,6 +611,8 @@ def find_axis(atoms):
             e = [nx,y,nz] #[e[r % 3], e[(r + 1) % 3], e[(r + 2) % 3]]
             atoms[i] = e
         code = get_dt_code(atoms)
+        if code is None:
+            return None
         r+=1
     return code
 
@@ -620,6 +628,8 @@ def dowker_code(atoms, from_atoms=True):
         code = find_axis(atoms)
     else:
         code = from_tuples(atoms)
+    if code is None:
+        return "01",[]
     changed = 1
     dc = code
     dc.check_yo()

@@ -104,23 +104,11 @@ def filter_greedy(atoms, outfile='', len_frames=0):
 
     return atoms, changed
 
-def num_gen():
-    cnt = 1
-    while True:
-        yield cnt
-        cnt += 1
-
-mod_num = num_gen()
-
 def prefilter_with_adding(atoms):
     """Removes atoms to reduce the backbone where possible. Adding new joints to long connections
     allows for reducing bumps"""
 
     first_bead_in_structure = atoms[0]
-    #print("#######before filterin#####3")
-    #for a in atoms:
-    #    print(a.Nhand,a,a.Chand)
-    #print("###done###")
 
     next_chain_handle = first_bead_in_structure
     changed = False
@@ -128,31 +116,24 @@ def prefilter_with_adding(atoms):
     while next_chain_handle is not None:
         cnt+=1
         currentN = next_chain_handle
-        currentC = currentN
-
+        currentC = currentN.Chand
+        if currentC is None: #to bypass that currentN can be an end
+            break
         while currentC.Chand and not currentC.end:
             currentC = currentC.Chand
         next_chain_handle = currentC.Chand
+        assert currentC.end or next_chain_handle is None
+        print(cnt,(currentN.Nhand,(currentN.id,currentN.end),currentN.Chand),(currentC.Nhand,(currentC.id,currentC.end),currentC.Chand))
         verbose = 0
-        num_Step = mod_num.next()
-        '''if num_Step == 6:
-            verbose = 1
-        if num_Step == 7:
-            exit()'''
-        #print("first of its name:",num_Step,cnt)
-        #print("len atoms",len(atoms),atoms[-1])
-        #print("curN",currentN,"curC",currentC,"handle",next_chain_handle)
-        #print("firstbead",first_bead_in_structure,first_bead_in_structure.Chand)
-
 
         Ntriangle = [currentN,currentN.Chand,currentN.Chand.Chand if currentN.Chand else None]
         Ctriangle = [currentC,currentC.Nhand,currentC.Nhand.Nhand if currentC.Nhand else None]
+        if 1 or verbose:
+            print("starting with",len(atoms))
+        #    print([(a.id,a.end) for a in atoms])
+         #   print("handle",next_chain_handle,next_chain_handle.id if next_chain_handle is not None else None)
 
-        if verbose:
-            print("starting with",len(atoms),atoms)
-            print([a.id for a in atoms])
-
-        while None not in Ntriangle and None not in Ctriangle and not any(x.end for x in Ntriangle+Ctriangle): #maybe just one of them?
+        while None not in Ntriangle and None not in Ctriangle:# and not any(x.end for x in Ntriangle+Ctriangle): #maybe just one of them?
             if verbose: print(currentN.id,currentN,currentC.id,currentC)
             if verbose:  print(Ntriangle,Ctriangle)
             if Ntriangle[0] == Ctriangle[0]: #just passed the overlap (for odd) or lack of it (even)
@@ -506,7 +487,6 @@ def prefilter_with_adding(atoms):
     for i, at in enumerate(atoms):
         at.setId(i)
     #exit()
-    #print(list((x.id,x.original_id) for x in atoms))
     #exit()
 
     return atoms, changed
