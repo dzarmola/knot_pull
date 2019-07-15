@@ -124,10 +124,14 @@ class Crossing(object):
         self.l1 = Line(num1,top1)
         self.l2 = Line(num2,top2)
         self._pair = (self.l1,self.l2)
+        self.first = False
 
     def reverse_topo(self):
         self.l1.top = not self.l1.top
         self.l2.top = not self.l2.top
+
+    def mark_as_first(self):
+        self.first = True
 
     def __getitem__(self,key):
         return self._pair[key]
@@ -218,6 +222,12 @@ class Code(object):
 
     def set_mod_dowker_code(self,lista):
         self._mod_dowker_code = lista
+
+    def mark_first(self):
+        for cr in self.crossings:
+            if 1 in [cr.l1.val,cr.l2.val]:
+                cr.mark_as_first()
+                break
 
     def start_later_by(self,val):
         for c in self.crossings:

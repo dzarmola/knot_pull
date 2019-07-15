@@ -11,10 +11,14 @@ from .kpclasses import Code, Crossing, CodeHistory, DowkerError
 
 def find_z(l0, l1, p):
     """Finds z axis position"""
+    #print(l0,l1,p)
     diffx = l1[0] - l0[0]
     diffpx = p[0] - l0[0]
     diffz = l1[2] - l0[2]
-    diffpz = diffpx * diffz / diffx
+    #print(diffpx,diffz,diffx)
+    diffpz = diffpx * diffz
+    if diffpz:
+        diffpz /= diffx
     return l0[2] + diffpz
 
 
@@ -103,7 +107,8 @@ def get_dt_code(atoms):
             if l == k or abs(l - k) == 1: continue
             line1 = [atoms[l], atoms[l + 1]]
             line2 = [atoms[k], atoms[k + 1]]
-            if intersect_2d(*(line1 + line2)) and not len(set(tuple(x[:2]) for x in line1 + line2)) < 4:
+            if intersect_2d(*(line1 + line2)) and not len(set(tuple(x) for x in line1 + line2)) < 4:
+            #if intersect_2d(*(line1 + line2)) and not len(set(tuple(x[:2]) for x in line1 + line2)) < 4:
                 cross = get_crossing_2d(atoms[l], atoms[l + 1], atoms[k], atoms[k + 1])
                 this_cross.append((point_distance_2d(atoms[l], cross), k, cross))
         for _, k, cross in sorted(this_cross):
@@ -199,13 +204,21 @@ def find_permutations_in(code):
 
 
 def translate_dt_list(code):
-    DT_CODES = {(4, 6, 2): "31",
-                (4, 6, 8, 2): "41",
-                (6, 8, 10, 2, 4): "51",
-                (4, 8, 10, 2, 6): "52",
-                (4, 8, 12, 10, 2, 6): "61",
-                (4, 8, 10, 12, 2, 6): "62",
-                (4, 8, 10, 2, 12, 6): "63"}
+    DT_CODES = {(4, 6, 2): "3_1",
+                (4, 6, 8, 2): "4_1",
+                (6, 8, 10, 2, 4): "5_1",
+                (4, 8, 10, 2, 6): "5_2",
+                (4, 8, 12, 10, 2, 6): "6_1",
+                (4, 8, 10, 12, 2, 6): "6_2",
+                (4, 8, 10, 2, 12, 6): "6_3",
+                (8,10,12,14,2,4,6) : "7_1",
+                (4,10,14,12,2,8,6) : "7_2",
+                (6, 10, 12, 14, 2, 4, 8) : "7_3",
+                (6, 10, 12, 14, 4, 2, 8) : "7_4",
+                (4, 10, 12, 14, 2, 8, 6) : "7_5",
+                (4, 8, 12, 2, 14, 6, 10) : "7_6",
+                (4, 8, 10, 12, 2, 14, 6): "7_7",
+                }
     out = []
     for c in code:
         for dc in DT_CODES:
@@ -214,24 +227,32 @@ def translate_dt_list(code):
                 break
         else:
             if len(c) == 5:
-                out.append("52")
+                out.append("5_2")
             elif len(c) == 3:
-                out.append("31")
+                out.append("3_1")
             elif len(c) == 4:
-                out.append("41")
+                out.append("4_1")
             else:
-                out.append("{}0".format(len(c)))
+                out.append("{}_0".format(len(c)))
     return "#".join(out)
 
 
 def translate_dt_code(code):
-    DT_CODES = {(4, 6, 2): "31",
-                (4, 6, 8, 2): "41",
-                (6, 8, 10, 2, 4): "51",
-                (4, 8, 10, 2, 6): "52",
-                (4, 8, 12, 10, 2, 6): "61",
-                (4, 8, 10, 12, 2, 6): "62",
-                (4, 8, 10, 2, 12, 6): "63"}
+    DT_CODES = {(4, 6, 2): "3_1",
+                (4, 6, 8, 2): "4_1",
+                (6, 8, 10, 2, 4): "5_1",
+                (4, 8, 10, 2, 6): "5_2",
+                (4, 8, 12, 10, 2, 6): "6_1",
+                (4, 8, 10, 12, 2, 6): "6_2",
+                (4, 8, 10, 2, 12, 6): "6_3",
+                (8, 10, 12, 14, 2, 4, 6): "7_1",
+                (4, 10, 14, 12, 2, 8, 6): "7_2",
+                (6, 10, 12, 14, 2, 4, 8): "7_3",
+                (6, 10, 12, 14, 4, 2, 8): "7_4",
+                (4, 10, 12, 14, 2, 8, 6): "7_5",
+                (4, 8, 12, 2, 14, 6, 10): "7_6",
+                (4, 8, 10, 12, 2, 14, 6): "7_7",
+                }
     code_str = code.dowker_str()
     code_str_r = code.dowker_rstr()
     for k, v in DT_CODES.items():
@@ -548,6 +569,72 @@ def can_be_untwisted(code):
                 cross.reverse_topo()
     return ch
 
+def minimize_full_code(code):
+    maks = len(code)*2
+    num_possibilities = maks
+    possible_codes = []
+
+    tmp_code = sorted([((l[0].top,l[0].val),(l[1].top,l[1].val)) for l in code],key=lambda x:x[0][1] if x[0][1]%2 else x[1][1])
+    possible_codes.append(tmp_code)
+    while num_possibilities:
+        num_possibilities -= 1
+        next_code = []
+        for i,c in enumerate(possible_codes[-1]):
+            (s1,v1),(s2,v2) = c
+            #s1,v1 = l1.top,l1.val
+            #s2,v2 = l2.top,l2.val
+            if v1 > 1:
+                v1 -= 1
+            else:
+                v1 = maks
+            if v2 > 1:
+                v2 -= 1
+            else:
+                v2 = maks
+            next_code.append(((s1,v1),(s2,v2)))
+        next_code = sorted(next_code,key=lambda x:x[0][1] if x[0][1]%2 else x[1][1])
+        possible_codes.append(next_code)
+    #for p in possible_codes:
+    #    print(p)
+    #for y in possible_codes:
+    #    print([x[0][1] if x[1][1]%2 else x[1][1] for x in y])
+    possible_codes = sorted(possible_codes,key=lambda y: [x[0][1] if x[1][1]%2 else x[1][1] for x in y])
+    #print("min",possible_codes[0])
+    return possible_codes[0]
+
+def minimize_sub_code(code):
+    maks = len(code)*2
+    num_possibilities = maks
+    possible_codes = []
+    tmp_code = [(2*i+1,code[i]) for i in range(len(code))]
+    #tmp_code = sorted([((l[0].top,l[0].val),(l[1].top,l[1].val)) for l in code],key=lambda x:x[0][1] if x[0][1]%2 else x[1][1])
+    possible_codes.append(tmp_code)
+    while num_possibilities:
+        num_possibilities -= 1
+        next_code = []
+        for i,c in enumerate(possible_codes[-1]):
+            v1,v2 = c
+            #s1,v1 = l1.top,l1.val
+            #s2,v2 = l2.top,l2.val
+            if v1 > 1:
+                v1 -= 1
+            else:
+                v1 = maks
+            if v2 > 1:
+                v2 -= 1
+            else:
+                v2 = maks
+            next_code.append((v1,v2))
+        next_code = sorted(next_code,key=lambda x:x[0] if x[0]%2 else x[1])
+        possible_codes.append(next_code)
+    #for p in possible_codes:
+    #    print(p)
+    #for y in possible_codes:
+    #    print([x[0] if x[1]%2 else x[1] for x in y])
+    possible_codes = sorted(possible_codes,key=lambda y: [x[0] if x[1]%2 else x[1] for x in y])
+    #print("min",possible_codes[0])
+    return [x[0] if x[1]%2 else x[1] for x in possible_codes[0]]
+
 
 def dowker_loop(code):
     """Finds single loops (twisted chain with no crossings)"""
@@ -583,8 +670,9 @@ def find_axis(atoms):
     code = get_dt_code(atoms)
     if code is None:
         return None
-    r=1
+    """r=1
     while any(c[0]%2==c[1]%2 for c in code):
+        if VERBOSE: print("Changing axis")
         if r==3:
             #print "Need more axes changes"
             break
@@ -592,9 +680,10 @@ def find_axis(atoms):
             e = [e[r % 3], e[(r + 1) % 3], e[(r + 2) % 3]]
             atoms[i] = e
         code = get_dt_code(atoms)
+        if VERBOSE: print("got",code)
         if code is None:
             return None
-        r+=1
+        r+=1"""
 
     #rotate y axis
 
@@ -602,6 +691,7 @@ def find_axis(atoms):
     cosT = math.cos(15)
     r = 1
     while any(c[0] % 2 == c[1] % 2 for c in code):
+        if VERBOSE: print("Changing axis by 15deg")
         if r == 23:
             break
         for i, e in enumerate(atoms):
@@ -632,7 +722,10 @@ def dowker_code(atoms, from_atoms=True):
         return "01",[]
     changed = 1
     dc = code
+    #print("will check",dc)
     dc.check_yo()
+    #print(dc)
+    dc.mark_first()
     history = CodeHistory()
     history.add(dc)
     if VERBOSE: print("code",code)
@@ -702,9 +795,17 @@ def dowker_code(atoms, from_atoms=True):
 
     sub_codes = find_permutations_in(dc.dowker_code())
     if VERBOSE: print (sub_codes)
+    min_sub_codes = []
+    for _s in sub_codes:
+        min_sub_codes.append(minimize_sub_code(_s))
 
-    translated = translate_dt_list(sub_codes)
+    translated = translate_dt_list(min_sub_codes)
     if VERBOSE: print (translated)
+
+    #print("Koncowy",dc)
+    #print("Koncowy", dc.dowker_code())
+    #print(minimize_code(dc))
+
 
     return translated,dc.mod_dowker_code()#sub_codes
 

@@ -123,13 +123,13 @@ def prefilter_with_adding(atoms):
             currentC = currentC.Chand
         next_chain_handle = currentC.Chand
         assert currentC.end or next_chain_handle is None
-        print(cnt,(currentN.Nhand,(currentN.id,currentN.end),currentN.Chand),(currentC.Nhand,(currentC.id,currentC.end),currentC.Chand))
+        #print(cnt,(currentN.Nhand,(currentN.id,currentN.end),currentN.Chand),(currentC.Nhand,(currentC.id,currentC.end),currentC.Chand))
         verbose = 0
 
         Ntriangle = [currentN,currentN.Chand,currentN.Chand.Chand if currentN.Chand else None]
         Ctriangle = [currentC,currentC.Nhand,currentC.Nhand.Nhand if currentC.Nhand else None]
-        if 1 or verbose:
-            print("starting with",len(atoms))
+        #if 1 or verbose:
+            #print("starting with",len(atoms))
         #    print([(a.id,a.end) for a in atoms])
          #   print("handle",next_chain_handle,next_chain_handle.id if next_chain_handle is not None else None)
 

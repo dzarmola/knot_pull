@@ -9,7 +9,8 @@ import sys,os,ntpath
 
 
 from knot_pull.reader import read_from_pdb, read_from_xyz, read_from_cif, guess_format
-from knot_pull.bipuller import pull
+from knot_pull.puller import pull
+from knot_pull.bipuller import pull as bipull
 from knot_pull.writer import write_xyz,print_out_last_frame
 from knot_pull.unentangler import unentangle
 import knot_pull.config as kpcfg
@@ -194,9 +195,15 @@ def main():
 
     RW_CONFIG["outfile"] = output
 
-    chains,repr = pull(atoms, RW_CONFIG, cnames, get_representative=args.representative_frame, greedy=CONFIG["GREEDY"])
+    if len(cnames) == 1:
+        chains,repr = bipull(atoms, RW_CONFIG, cnames, get_representative=args.representative_frame, greedy=CONFIG["GREEDY"])
+    else:
+        chains, repr = pull(atoms, RW_CONFIG, cnames, get_representative=args.representative_frame,
+                            greedy=CONFIG["GREEDY"])
     if args.output:
         output.close()
+
+    #print (chains[0].atoms)
 
     if args.representative_frame:
         repr_infile = output.name.replace("_out.","_out_repr.")
