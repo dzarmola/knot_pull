@@ -15,4 +15,4 @@ EPSILON = 0.05
 
 ADD_MIDDLE_TO_COPY = True
 
-VERBOSE = 1#False#True
+VERBOSE = False#True
