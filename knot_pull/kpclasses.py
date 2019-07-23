@@ -312,7 +312,7 @@ class Code(object):
     def read_in(self,code):
         for c in code:
             s=None
-            if c[1] in "+-":
+            if type(c[1]) is str and c[1] in "+-":
                 s = (c[1]+c[3])[0]
                 c = [c[0],c[2]]
             e = 1 if c[0]%2 else 0
