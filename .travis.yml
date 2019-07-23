@@ -66,6 +66,12 @@ matrix:
 
   allow_failures:
     - os: osx
+    - os: linux
+      dist: bionic
+      python: 3.5
+    - os: linux
+      dist: bionic
+      python: 3.6
 
 install:
   - pip install pipenv

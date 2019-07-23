@@ -54,6 +54,110 @@ def mul_v3_fl(v0, f):
     #        )
     return np.array(v0) * f
 
+def gen_form_line_2d(p0,p1):
+    ax,ay,_ = p0
+    bx,by,_ = p1
+
+    m = (by-ay)/(bx-ax)
+
+    line_func = lambda x: m*(x-ax)+ay
+
+    return line_func,m
+
+def get_skein(line0,line1,N_terminal_from_B,C_terminal_from_b):
+    """Line defined by line0,line1 points must go on top in crossing"""
+    line_func,slope = gen_form_line_2d(line0,line1)
+
+    if line0[0] == line1[0]: # vertical line
+        if line0[1] > line1[1]: #going down
+            if C_terminal_from_b[0] < line0[0]:
+                return "+"
+            elif C_terminal_from_b[0] == line0[0]:
+                if N_terminal_from_B[0] < line0[0]:
+                    return "-"
+                else:
+                    return "+"
+            else:
+                return "-"
+        else:
+            if C_terminal_from_b[0] < line0[0]:
+                return "-"
+            elif C_terminal_from_b[0] == line0[0]:
+                if N_terminal_from_B[0] < line0[0]:
+                    return "+"
+                else:
+                    return "-"
+            else:
+                return "+"
+
+    bx,by,_ = C_terminal_from_b
+
+    if slope < 0: # linia na szczecin
+        if line0[1] > line1[1]: #going down
+            if by < line_func(bx): #ponizej linii
+                return "-"
+            elif by == line_func(bx): #na linii
+                if N_terminal_from_B[1] < line_func(N_terminal_from_B[0]):
+                    return "+"
+                else:
+                    return "-"
+            else: #powyzej
+                return "+"
+        else: #jednak na kielce
+            if by < line_func(bx): #ponizej linii
+                return "+"
+            elif by == line_func(bx): #na linii
+                if N_terminal_from_B[1] < line_func(N_terminal_from_B[0]):
+                    return "-"
+                else:
+                    return "+"
+            else: #powyzej
+                return "-"
+
+    elif slope == 0: #pozioma
+        if line0[0] < line1[0]:
+            if by < line_func(bx): #ponizej linii
+                return "-"
+            elif by == line_func(bx): #na linii
+                if N_terminal_from_B[1] < line_func(N_terminal_from_B[0]):
+                    return "+"
+                else:
+                    return "-"
+            else: #powyzej
+                return "+"
+        else: #jednak na kielce
+            if by < line_func(bx): #ponizej linii
+                return "+"
+            elif by == line_func(bx): #na linii
+                if N_terminal_from_B[1] < line_func(N_terminal_from_B[0]):
+                    return "-"
+                else:
+                    return "+"
+            else: #powyzej
+                return "-"
+
+    else:
+        if line0[1] < line1[1]: #going up
+            if by < line_func(bx): #ponizej linii
+                return "-"
+            elif by == line_func(bx): #na linii
+                if N_terminal_from_B[1] < line_func(N_terminal_from_B[0]):
+                    return "+"
+                else:
+                    return "-"
+            else: #powyzej
+                return "+"
+        else: #
+            if by < line_func(bx): #ponizej linii
+                return "+"
+            elif by == line_func(bx): #na linii
+                if N_terminal_from_B[1] < line_func(N_terminal_from_B[0]):
+                    return "-"
+                else:
+                    return "+"
+            else: #powyzej
+                return "-"
+
 
 def get_outside_points(Nend, Cend, dist, sec_vec=(1., 1., 1.)):
     os_bialka = Nend - Cend  # sub_v3v3(Nend,Cend)

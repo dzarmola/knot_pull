@@ -125,6 +125,7 @@ class Crossing(object):
         self.l2 = Line(num2,top2)
         self._pair = (self.l1,self.l2)
         self.first = False
+        self.skein = None
 
     def reverse_topo(self):
         self.l1.top = not self.l1.top
@@ -310,11 +311,16 @@ class Code(object):
 
     def read_in(self,code):
         for c in code:
+            s=None
+            if c[1] in "+-":
+                s = (c[1]+c[3])[0]
+                c = [c[0],c[2]]
             e = 1 if c[0]%2 else 0
             if c[e]>0:
                 cr = Crossing(abs(c[0]),c[0]!=c[e],abs(c[1]),c[1]!=c[e])
             else:
                 cr = Crossing(abs(c[0]),c[0]==c[e],abs(c[1]),c[1]==c[e])
+            cr.skein=s
             self.add(cr)
 
     def dowker_code(self): #absolute values are implied
@@ -326,8 +332,10 @@ class Code(object):
     def mod_dowker_code(self):
         if self._mod_dowker_code is not None:
             return self._mod_dowker_code
-        cd = sorted([x.to_mod_code() for x in self.crossings])
-        return [x[1] for x in cd]
+        cd = sorted([(x.to_mod_code(),x.skein) for x in self.crossings])
+        mdc = ", ".join(["{}({})".format(_[0][1],_[1]) for _ in cd])
+        return mdc
+#        return [x[1] for x in cd]
 
     def dowker_str(self):
         d = self.dowker_code()

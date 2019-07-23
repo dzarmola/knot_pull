@@ -4,7 +4,8 @@ import subprocess
 
 from .vector_ops import *
 from .kpclasses import chainDeepCopy
-from .dowker_code_new import dowker_code
+from .dowker_code_chiral import dowker_code
+#from .dowker_code_new import dowker_code
 from .config import VERBOSE
 
 

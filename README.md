@@ -74,7 +74,7 @@ If no output-modifying flag is specified [e.g. -q], the output will look similar
 #LOG: finished smoothing: 2 chain(s)
 Final topology: [8, 8]: 
 [3_1](A)  U  [3_1](B)
-#DT codes: [[4, 6, 2]](A)  U  [[-4, -6, -2]](B)
+#DT codes: [4(+), 6(+), 2(+)](A)  U  [-4(+), -6(+), -2(+)](B)
 ```
 where:
 * number of beads is the number of read-in data points and additional "dummy" coordinates
@@ -84,7 +84,9 @@ added to fill in long gaps in the structure
 chain after smoothing
 * next line gives the Alexander-Briggs notation of knots in each chain. Chains separated by a "#" are linked,
 separated by "U" are not.
-* DT codes show the minimal Dowker code found for each chain. 
+* DT codes show the simplified Dowker code found for each chain. Sign in the parenthesis after
+each crossing indicates crossing direction as in skein relations: if reoriented so that both lines point up,
+"+" indicates that the one going left-to-right is on top, "-" - the one right-to-left. 
 
 ### Help:
 ```
