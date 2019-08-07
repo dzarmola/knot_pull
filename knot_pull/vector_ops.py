@@ -58,6 +58,7 @@ def gen_form_line_2d(p0,p1):
     ax,ay,_ = p0
     bx,by,_ = p1
 
+
     m = (by-ay)/(bx-ax)
 
     line_func = lambda x: m*(x-ax)+ay
@@ -66,7 +67,7 @@ def gen_form_line_2d(p0,p1):
 
 def get_skein(line0,line1,N_terminal_from_B,C_terminal_from_b):
     """Line defined by line0,line1 points must go on top in crossing"""
-    line_func,slope = gen_form_line_2d(line0,line1)
+
 
     if line0[0] == line1[0]: # vertical line
         if line0[1] > line1[1]: #going down
@@ -90,6 +91,7 @@ def get_skein(line0,line1,N_terminal_from_B,C_terminal_from_b):
             else:
                 return "+"
 
+    line_func, slope = gen_form_line_2d(line0, line1)
     bx,by,_ = C_terminal_from_b
 
     if slope < 0: # linia na szczecin

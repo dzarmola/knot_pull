@@ -9,17 +9,28 @@ from .kpclasses import Code, Crossing, CodeHistory, DowkerError
 
 #### Helper functions #########
 
-def find_z(l0, l1, p):
+def find_z_old(l0, l1, p):
     """Finds z axis position"""
-    #print(l0,l1,p)
+    print(l0,l1,p)
     diffx = l1[0] - l0[0]
     diffpx = p[0] - l0[0]
     diffz = l1[2] - l0[2]
-    #print(diffpx,diffz,diffx)
+    print(diffx,diffpx,diffz)
     diffpz = diffpx * diffz
     if diffpz:
         diffpz /= diffx
+    print(diffpz)
     return l0[2] + diffpz
+
+def find_z(l0, l1, p):
+    """Finds z axis position"""
+    x0,y0,z0 = l0
+    x1,y1,z1 = l1
+    full_pd = point_distance_2d(l0,l1)
+    cross_pd = point_distance_2d(l0,p)
+    dz = z1-z0
+    return z0 + dz*(cross_pd/full_pd)
+
 
 
 def fix_numbering(code,start):
@@ -119,6 +130,7 @@ def get_dt_code(atoms):
                     val = -1
                 skein = get_skein(atoms[l], atoms[l+1], atoms[k], atoms[k+1])
             crosses[tuple(sorted([l, k]))] = crosses.get(tuple(sorted([l, k])), []) + [cnt * val,skein]
+
             cnt += 1
     if not crosses:
         return None
