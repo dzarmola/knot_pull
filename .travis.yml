@@ -72,7 +72,10 @@ matrix:
     - os: linux
       dist: bionic
       python: 3.6
-
+    - os: linux
+      dist: bionic
+      python: "3.8-dev"
+      
 install:
   - pip install pipenv
   - pipenv install nose codecov numpy
